@@ -1,4 +1,3 @@
 REPO INSTALL modules/mba.xqm
 REPO INSTALL modules/synchronization.xqm
 REPO INSTALL modules/scxml_extension.xqm
-REPO INSTALL modules/.xqm
