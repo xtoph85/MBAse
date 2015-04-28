@@ -68,11 +68,11 @@ declare function sync:everyDescendantAtLevelSatisfies
      $level as xs:string,
      $cond  as xs:string) as xs:boolean {
   let $descendants := mba:getDescendantsAtLevel($mba, $level)
-    return every $descendant in $descendants satisfies
-      let $dataModels :=
-        sc:selectDataModels(mba:getConfiguration($descendant))
   
-  return sc:eval($cond, $dataModels)
+  return every $descendant in $descendants satisfies
+    let $dataModels :=
+      sc:selectDataModels(mba:getConfiguration($descendant))
+    return sc:eval($cond, $dataModels)
 };
 
 declare function sync:someDescendantAtLevelSatisfies
