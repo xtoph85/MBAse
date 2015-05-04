@@ -127,7 +127,8 @@ declare updating function mba:insertAsCollection($db as xs:string,
     let $fileName        := 'collections/' || $collectionName || '.xml'
     let $collectionEntry :=
       <collection name='{$collectionName}' file="{$fileName}" hierarchy="simple">
-        <updateLog/>
+        <new/>
+        <updated/>
       </collection>
     
     return (
@@ -244,6 +245,26 @@ declare updating function mba:removeSCXML($mba       as element(),
   
   return
     delete node $elements/sc:scxml[@name = $scxmlName]
+};
+
+declare updating function mba:insertLevel($mba             as element(),
+                                          $levelName       as xs:string,
+                                          $parentLevelName as xs:string,
+                                          $childLevelName  as xs:string?) {
+  let $parentLevel := $mba/mba:topLevel[@name = $parentLevelName]
+  let $parentLevel :=
+    if ($parentLevel) then $parentLevel
+    else $mba/mba:topLevel//mba:childLevel[@name = $parentLevelName]
+  
+  let $childLevel := if ($childLevelName) 
+    then $mba/mba:topLevel//mba:childLevel[@name = $childLevelName] else ()
+  
+  let $newLevel :=
+    <mba:childLevel name="{$levelName}">
+      {$childLevel}
+    </mba:childLevel>
+  
+  return insert node $newLevel into $parentLevel
 };
 
 declare function mba:getAncestorAtLevel($mba   as element(),
@@ -393,7 +414,19 @@ declare updating function mba:markAsUpdated($mba as element()) {
     $document/mba:collections/mba:collection[@name = $collectionName]
   
   return
-    insert node <mba ref="{$mba/@name}"/> into $collectionEntry/mba:updateLog
+    insert node <mba ref="{$mba/@name}"/> into $collectionEntry/mba:updated
+};
+
+declare updating function mba:markAsNew($mba as element()) {
+  let $dbName := mba:getDatabaseName($mba)
+  let $collectionName := mba:getCollectionName($mba)
+  
+  let $document := db:open($dbName, 'collections.xml')
+  let $collectionEntry := 
+    $document/mba:collections/mba:collection[@name = $collectionName]
+  
+  return
+    insert node <mba ref="{$mba/@name}"/> into $collectionEntry/mba:new
 };
 
 declare updating function mba:removeFromUpdateLog($mba as element()) {
@@ -406,7 +439,21 @@ declare updating function mba:removeFromUpdateLog($mba as element()) {
   
   return
     delete node functx:first-node(
-      $collectionEntry/mba:updateLog/mba:mba[@name = $mba/@name]
+      $collectionEntry/mba:updated/mba:mba[@ref = $mba/@name]
+    )
+};
+
+declare updating function mba:removeFromInsertLog($mba as element()) {
+  let $dbName := mba:getDatabaseName($mba)
+  let $collectionName := mba:getCollectionName($mba)
+  
+  let $document := db:open($dbName, 'collections.xml')
+  let $collectionEntry := 
+    $document/mba:collections/mba:collection[@ref = $collectionName]
+  
+  return
+    delete node functx:first-node(
+      $collectionEntry/mba:new/mba:mba[@name = $mba/@name]
     )
 };
 

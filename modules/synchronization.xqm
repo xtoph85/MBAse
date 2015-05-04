@@ -42,7 +42,7 @@ declare function sync:eval($expr       as xs:string,
       
   return xquery:eval(fn:string-join($declare) || 
                      $expr, 
-                     map:new($dataBindings))
+                     map:merge($dataBindings))
 };
 
 declare function sync:everyDescendantAtLevelIsInState($mba     as element(),
@@ -264,8 +264,11 @@ declare updating function sync:newDescendant(
   
   let $new := mba:concretize($parentElements, $name, $level)
   
-  return insert node $new into 
-    $parentElements[1]/mba:concretizations
+  return (
+    insert node $new into 
+      $parentElements[1]/mba:concretizations,
+    mba:markAsNew($mba)
+  )
 };
 
 declare function sync:assignNewDescendant($mba        as element(),
@@ -347,6 +350,6 @@ declare function sync:assignNewDescendant($mba        as element(),
       )
     ) || 
     ') return $new',
-    map:new((map:entry('mba', $mba), map:entry('nodelist', $nodelist)))
+    map:merge((map:entry('mba', $mba), map:entry('nodelist', $nodelist)))
   )
 };
