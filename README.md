@@ -3,7 +3,7 @@
 MBAse (read: m-base) is a management system for multilevel bbusiness artifacts.
 
 ##Prerequisites
-The multilevel business process environment works in conjunction with an XML database management system.
+The multilevel business artifact database works in conjunction with an XML database management system.
 Download and install an XML database management system.
 
 We recommend BaseX 8.1.1: http://basex.org/
