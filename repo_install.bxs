@@ -1,4 +1,4 @@
-REPO INSTALL C:\Users\Christoph\Uni\M-BPM\MBAse\modules\functx.xqm
-REPO INSTALL C:\Users\Christoph\Uni\M-BPM\MBAse\modules\mba.xqm
-REPO INSTALL C:\Users\Christoph\Uni\M-BPM\MBAse\modules\scxml_extension.xqm
-REPO INSTALL C:\Users\Christoph\Uni\M-BPM\MBAse\modules\synchronization.xqm
+REPO INSTALL modules/functx.xqm
+REPO INSTALL modules/mba.xqm
+REPO INSTALL modules/scxml_extension.xqm
+REPO INSTALL modules/synchronization.xqm

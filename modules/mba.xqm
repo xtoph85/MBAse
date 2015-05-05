@@ -300,9 +300,11 @@ declare function mba:isInState($mba     as element(),
   return fn:exists($currentStatus/state[@ref=$stateId])
 };
 
-declare function mba:getCurrentStatus($mba as element()) as element() {
+declare function mba:getCurrentStatus($mba as element()) as element()* {
   let $scxml := mba:getSCXML($mba)
-  let $currentStatus := $scxml/sc:datamodel/sc:data[@id = '_x']/currentStatus
+  let $_x := $scxml/sc:datamodel/sc:data[@id = '_x']
+  let $currentStatus := if ($_x) then $_x/currentStatus
+    else ()
   
   return $currentStatus
 };
@@ -311,7 +313,7 @@ declare function mba:getConfiguration($mba as element()) as element()* {
   let $scxml := mba:getSCXML($mba)
   let $currentStatus := mba:getCurrentStatus($mba)
   
-  return
+  return if ($currentStatus) then
     for $s in $currentStatus/*
       return typeswitch($s)
         case element(initial)
@@ -320,6 +322,7 @@ declare function mba:getConfiguration($mba as element()) as element()* {
         case element(state)
           return $scxml//sc:state[$s/@ref = ./@id]
         default return ()
+   else ()
 };
 
 declare updating function mba:addCurrentStates($mba    as element(),
@@ -400,7 +403,8 @@ declare function mba:getCollectionName($mba) {
   
   let $document := db:open($dbName, 'collections.xml')
     
-  let $collectionName := $document/mba:collections/mba:collection[@file = $path]/@name
+  let $collectionName := 
+    $document/mba:collections/mba:collection[@file = $path]/@name
   
   return fn:string($collectionName)
 };
