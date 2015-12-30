@@ -16,4 +16,6 @@ declare variable $mbaName := 'SocialAndEconomicSciences';
 
 let $mba := mba:getMBA($db, $collection, $mbaName)
 
-return $mba
+let $scxml := mba:getSCXML($mba)
+
+return $scxml
