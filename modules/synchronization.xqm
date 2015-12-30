@@ -24,9 +24,9 @@
  :)
 module namespace sync='http://www.dke.jku.at/MBA/Synchronization';
 
-import module namespace mba = 'http://www.dke.jku.at/MBA';
-import module namespace sc = 'http://www.w3.org/2005/07/scxml';
-import module namespace functx = 'http://www.functx.com';
+import module namespace mba = 'http://www.dke.jku.at/MBA' at 'mba.xqm';
+import module namespace sc = 'http://www.w3.org/2005/07/scxml' at 'scxml.xqm';
+import module namespace functx = 'http://www.functx.com' at 'functx.xqm';
 
 declare function sync:eval($expr       as xs:string,
                            $dataModels as element()*) {
