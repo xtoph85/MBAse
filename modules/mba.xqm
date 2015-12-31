@@ -161,15 +161,7 @@ declare updating function mba:createCollection($db as xs:string,
 };
 
 
-(: Liefert ein neues MBA zurück ohne es einzufügen, dass soll später mit insert passieren.
-Funktioniert bisher nur mit Simple Hiearchies, muss also für Parallel Hierarchies erweitert werden:)
 
-declare updating function mba:insert($db as xs:string,
-                                     $collection as xs:string,
-                                     $parent as element(),
-                                     $mba as element()) {
-  ()
-};
 
 declare function mba:concretize($parents  as element()*,
                                 $name     as xs:string,
@@ -559,12 +551,11 @@ declare updating function mba:insert($db as xs:string,
 Wenn das übergebene MBA keinen abstractions-Tag hat, dann soll dieser eingefügt werden je nach Information,
 die in $parents enthalten ist. $parents soll die MBA nodes enthalten, also die identity soll hier preserved werden.
 Wir programmieren fast objekt-orientiert, node identity bleibt durch eine selection eines Nodes grundsätzlich erhalten. :)
+(: Liefert ein neues MBA zurück ohne es einzufügen, dass soll später mit insert passieren.
+Funktioniert bisher nur mit Simple Hiearchies, muss also für Parallel Hierarchies erweitert werden :)
 declare updating function mba:insert($db as xs:string,
         $collection as xs:string,
         $parents as element()*,
         $mba as element()) {
   ()
 };
-
-
-
