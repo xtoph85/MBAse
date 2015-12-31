@@ -156,20 +156,7 @@ declare function mba:concretize($parents  as element()*,
     </mba:mba>
   
   let $concretization := copy $c := $concretization modify (
-    if (not ($c/mba:topLevel/mba:elements/sc:scxml[1]/sc:datamodel/sc:data[@id = '_event'])) then
-      insert node <sc:data id = "_event"/> into $c/mba:topLevel/mba:elements/sc:scxml[1]/sc:datamodel
-    else (),
-    if (not ($c/mba:topLevel/mba:elements/sc:scxml[1]/sc:datamodel/sc:data[@id = '_x'])) then
-      insert node 
-        <sc:data id = "_x">
-          <db xmlns="">{mba:getDatabaseName($parent)}</db>
-          <collection xmlns="">{mba:getCollectionName($parent)}</collection>
-          <name xmlns="">{$name}</name>
-          <currentStatus xmlns=""/>
-          <externalEventQueue xmlns=""/>
-        </sc:data>
-      into $c/mba:topLevel/mba:elements/sc:scxml[1]/sc:datamodel
-    else ()
+    mba:addBoilerPlateElements($c)
   ) return $c
   
   return $concretization
@@ -502,9 +489,8 @@ declare updating function mba:removeCurrentEvent($mba as element()) {
   return delete nodes $currentEvent/*
 };
 
-declare updating function mba:init($mba as element()) {
+declare updating function mba:addBoilerPlateElements($mba as element()) {
   let $scxml := mba:getSCXML($mba)
-  let $initialStates := sc:getInitialStates($scxml)
   
   return (
     if (not ($scxml/sc:datamodel/sc:data[@id = '_event'])) then
@@ -524,6 +510,32 @@ declare updating function mba:init($mba as element()) {
     if (not ($mba/mba:concretizations)) then
       insert node <mba:concretizations/> into $mba
     else ()
+    (: eventuell bei parallel hierarchies auch nocht leere default-knoten für abstractions, descendants and ancestors:))
   )
 };
+
+
+declare updating function mba:createCollection($db as xs:string,
+        $name as xs:string) {
+  ()
+};
+
+
+(: Bei beiden insert-Funktionen dürfen nur konsistente MBAs eingefügt werden (die also auch schon Boilerplate-Elements enthalten :))
+(: Diese Funktion kann eigentlich nur für MBAs mit Parallel Hierarchies Sinn, weil nur diese MBAs einen Verweis auf die Parent-MBAs haben. Das muss hier also überprüft werden (Beispiel gibt's in den anderen Funktionen) :)
+declare updating function mba:insert($db as xs:string,
+        $collection as xs:string,
+        $mba as element()) {
+  ()
+};
+
+(: Diese Funktion ist allgemein für Parallel und Simple Hierarchies verwendbar. Wenn das übergebene MBA keinen abstractions-Tag hat, dann soll dieser eingefügt werden je nach Information, die in $parents enthalten ist. $parents soll die MBA nodes enthalten, also die identity soll hier preserved werden. Wir programmieren fast objekt-orientiert, node identity bleibt durch eine selection eines Nodes grundsätzlich erhalten. :)
+declare updating function mba:insert($db as xs:string,
+        $collection as xs:string,
+        $parents as element()*,
+        $mba as element()) {
+  ()
+};
+
+
 
