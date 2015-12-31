@@ -127,7 +127,7 @@ declare updating function mba:insertAsCollection($db as xs:string,
     let $fileName        := 'collections/' || $collectionName || '.xml'
     let $collectionEntry :=
       <collection name='{$collectionName}' file="{$fileName}" hierarchy="simple">
-        <new/>
+        <uninitialized/>
         <updated/>
       </collection>
     
@@ -136,6 +136,39 @@ declare updating function mba:insertAsCollection($db as xs:string,
       insert node $collectionEntry into $document/mba:collections
     )
   else () (: can only insert MBAs with simple hierarchy as collection :)
+};
+
+declare updating function mba:createCollection($db as xs:string,
+                                               $name as xs:string) {
+    let $document        := db:open($db, 'collections.xml')
+    let $collectionName  := $name
+    let $fileName        := 'collections/' || $collectionName || '.xml'
+    let $collectionEntry :=
+      <collection name='{$collectionName}' file="{$fileName}" hierarchy="parallel">
+        <uninitialized/>
+        <updated/>
+      </collection>
+    
+    let $collectionFile :=
+      <collection xmlns="http://www.dke.jku.at/MBA" name="{$collectionName}"/>
+    
+    return (
+      db:add($db, $collectionFile, $fileName),
+      insert node $collectionEntry into $document/mba:collections
+    )
+};
+
+declare updating function mba:insert($db as xs:string,
+                                     $collection as xs:string,
+                                     $mba as element()) {
+  ()
+};
+
+declare updating function mba:insert($db as xs:string,
+                                     $collection as xs:string,
+                                     $parent as element(),
+                                     $mba as element()) {
+  ()
 };
 
 declare function mba:concretize($parents  as element()*,
@@ -150,24 +183,10 @@ declare function mba:concretize($parents  as element()*,
       <mba:topLevel name="{$topLevel}">
         {$level/*}
       </mba:topLevel>
-      <mba:concretizations/>
     </mba:mba>
   
   let $concretization := copy $c := $concretization modify (
-    if (not ($c/mba:topLevel/mba:elements/sc:scxml[1]/sc:datamodel/sc:data[@id = '_event'])) then
-      insert node <sc:data id = "_event"/> into $c/mba:topLevel/mba:elements/sc:scxml[1]/sc:datamodel
-    else (),
-    if (not ($c/mba:topLevel/mba:elements/sc:scxml[1]/sc:datamodel/sc:data[@id = '_x'])) then
-      insert node 
-        <sc:data id = "_x">
-          <db xmlns="">{mba:getDatabaseName($parent)}</db>
-          <collection xmlns="">{mba:getCollectionName($parent)}</collection>
-          <name xmlns="">{$name}</name>
-          <currentStatus xmlns=""/>
-          <externalEventQueue xmlns=""/>
-        </sc:data>
-      into $c/mba:topLevel/mba:elements/sc:scxml[1]/sc:datamodel
-    else ()
+      mba:addBoilerplateElements($c)
   ) return $c
   
   return $concretization
@@ -494,9 +513,8 @@ declare updating function mba:removeCurrentEvent($mba as element()) {
   return delete nodes $currentEvent/*
 };
 
-declare updating function mba:init($mba as element()) {
+declare updating function mba:addBoilerplateElements($mba as element()) {
   let $scxml := mba:getSCXML($mba)
-  let $initialStates := sc:getInitialStates($scxml)
   
   return (
     if (not ($scxml/sc:datamodel/sc:data[@id = '_event'])) then
