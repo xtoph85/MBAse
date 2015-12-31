@@ -138,6 +138,8 @@ declare updating function mba:insertAsCollection($db as xs:string,
   else () (: can only insert MBAs with simple hierarchy as collection :)
 };
 
+(: Liefert ein neues MBA zurück ohne es einzufügen, dass soll später mit insert passieren.
+Funktioniert bisher nur mit Simple Hiearchies, muss also für Parallel Hierarchies erweitert werden:)
 declare function mba:concretize($parents  as element()*,
                                 $name     as xs:string,
                                 $topLevel as xs:string) as element() {
@@ -409,6 +411,9 @@ declare function mba:getCollectionName($mba) {
   return fn:string($collectionName)
 };
 
+
+(: Funktion wird vom MultiLevelProcessEnvironment aufgerufen - soll anzeigen dass ein MBA entweder verändert wurde (Attribut)
+ oder wenn ein Event enqued wurde :)
 declare updating function mba:markAsUpdated($mba as element()) {
   let $dbName := mba:getDatabaseName($mba)
   let $collectionName := mba:getCollectionName($mba)
@@ -421,7 +426,9 @@ declare updating function mba:markAsUpdated($mba as element()) {
     insert node <mba ref="{$mba/@name}"/> into $collectionEntry/mba:updated
 };
 
-declare updating function mba:markAsNew($mba as element()) {
+(: Funktion wird vom MultiLevelProcessEnvironment aufgerufen - soll anzeigen dass der Lifecycle eines
+  neu erstellten MBAs noch nicht begonnen hat - also quasi nur die Schemadaten vorhanden sind, die Objektdaten aber fehlen:)
+declare updating function mba:markAsUninitialized($mba as element()) {
   let $dbName := mba:getDatabaseName($mba)
   let $collectionName := mba:getCollectionName($mba)
   
@@ -433,6 +440,7 @@ declare updating function mba:markAsNew($mba as element()) {
     insert node <mba ref="{$mba/@name}"/> into $collectionEntry/mba:new
 };
 
+(: Gegenstück zur markAsUpdated-Funktion - wird vom MultiLevelProcessEnvironment aufgerufen :)
 declare updating function mba:removeFromUpdateLog($mba as element()) {
   let $dbName := mba:getDatabaseName($mba)
   let $collectionName := mba:getCollectionName($mba)
@@ -446,7 +454,7 @@ declare updating function mba:removeFromUpdateLog($mba as element()) {
       $collectionEntry/mba:updated/mba:mba[@ref = $mba/@name]
     )
 };
-
+(: Gegenstück zur markAsNew-Funktion - wird vom MultiLevelProcessEnvironment aufgerufen :)
 declare updating function mba:removeFromInsertLog($mba as element()) {
   let $dbName := mba:getDatabaseName($mba)
   let $collectionName := mba:getCollectionName($mba)

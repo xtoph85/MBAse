@@ -267,7 +267,7 @@ declare updating function sync:newDescendant(
   return (
     insert node $new into 
       $parentElements[1]/mba:concretizations,
-    mba:markAsNew($mba)
+    mba:markAsUninitialized($mba)
   )
 };
 
