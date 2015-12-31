@@ -27,9 +27,9 @@
  :)
 module namespace mba='http://www.dke.jku.at/MBA';
 
-import module namespace functx = 'http://www.functx.com';
+import module namespace functx = 'http://www.functx.com' at 'functx.xqm';
 
-import module namespace sc='http://www.w3.org/2005/07/scxml';
+import module namespace sc='http://www.w3.org/2005/07/scxml' at 'scxml.xqm';
 
 declare updating function mba:createMBAse($newDb as xs:string) {
   let $dbDimSchemaFileName := 'xsd/collections.xsd'
@@ -114,7 +114,7 @@ declare updating function mba:createMBAse($newDb as xs:string) {
 };
 
 (:~
- : Insert an MBA with a simple hierarchy as a new collection into the database.
+ : Insert an MBA with a simple hierarchy (only for simple hierarchies) as a new collection into the database.
  :
  : @param $db the name of the database.
  : @param $mba an MBA with a simple level hierarchy. 
@@ -138,31 +138,31 @@ declare updating function mba:insertAsCollection($db as xs:string,
   else () (: can only insert MBAs with simple hierarchy as collection :)
 };
 
+(: Funktion zur Erstellung einer Parallel-Hierarchy-Collection
+Zuerst wird createCollection aufgerufen, dann wird mithilfe von insert in die Collection eingefügt :)
 declare updating function mba:createCollection($db as xs:string,
-                                               $name as xs:string) {
-    let $document        := db:open($db, 'collections.xml')
-    let $collectionName  := $name
-    let $fileName        := 'collections/' || $collectionName || '.xml'
-    let $collectionEntry :=
-      <collection name='{$collectionName}' file="{$fileName}" hierarchy="parallel">
-        <uninitialized/>
-        <updated/>
-      </collection>
-    
-    let $collectionFile :=
-      <collection xmlns="http://www.dke.jku.at/MBA" name="{$collectionName}"/>
-    
-    return (
-      db:add($db, $collectionFile, $fileName),
-      insert node $collectionEntry into $document/mba:collections
-    )
+        $name as xs:string) {
+  let $document        := db:open($db, 'collections.xml')
+  let $collectionName  := $name
+  let $fileName        := 'collections/' || $collectionName || '.xml'
+  let $collectionEntry :=
+    <collection name='{$collectionName}' file="{$fileName}" hierarchy="parallel">
+      <uninitialized/>
+      <updated/>
+    </collection>
+
+  let $collectionFile :=
+    <collection xmlns="http://www.dke.jku.at/MBA" name="{$collectionName}"/>
+
+  return (
+    db:add($db, $collectionFile, $fileName),
+    insert node $collectionEntry into $document/mba:collections
+  )
 };
 
-declare updating function mba:insert($db as xs:string,
-                                     $collection as xs:string,
-                                     $mba as element()) {
-  ()
-};
+
+(: Liefert ein neues MBA zurück ohne es einzufügen, dass soll später mit insert passieren.
+Funktioniert bisher nur mit Simple Hiearchies, muss also für Parallel Hierarchies erweitert werden:)
 
 declare updating function mba:insert($db as xs:string,
                                      $collection as xs:string,
@@ -428,6 +428,9 @@ declare function mba:getCollectionName($mba) {
   return fn:string($collectionName)
 };
 
+
+(: Funktion wird vom MultiLevelProcessEnvironment aufgerufen - soll anzeigen dass ein MBA entweder verändert wurde (Attribut)
+ oder wenn ein Event enqued wurde :)
 declare updating function mba:markAsUpdated($mba as element()) {
   let $dbName := mba:getDatabaseName($mba)
   let $collectionName := mba:getCollectionName($mba)
@@ -440,7 +443,9 @@ declare updating function mba:markAsUpdated($mba as element()) {
     insert node <mba ref="{$mba/@name}"/> into $collectionEntry/mba:updated
 };
 
-declare updating function mba:markAsNew($mba as element()) {
+(: Funktion wird vom MultiLevelProcessEnvironment aufgerufen - soll anzeigen dass der Lifecycle eines
+  neu erstellten MBAs noch nicht begonnen hat - also quasi nur die Schemadaten vorhanden sind, die Objektdaten aber fehlen:)
+declare updating function mba:markAsUninitialized($mba as element()) {
   let $dbName := mba:getDatabaseName($mba)
   let $collectionName := mba:getCollectionName($mba)
   
@@ -452,6 +457,7 @@ declare updating function mba:markAsNew($mba as element()) {
     insert node <mba ref="{$mba/@name}"/> into $collectionEntry/mba:new
 };
 
+(: Gegenstück zur markAsUpdated-Funktion - wird vom MultiLevelProcessEnvironment aufgerufen :)
 declare updating function mba:removeFromUpdateLog($mba as element()) {
   let $dbName := mba:getDatabaseName($mba)
   let $collectionName := mba:getCollectionName($mba)
@@ -465,7 +471,7 @@ declare updating function mba:removeFromUpdateLog($mba as element()) {
       $collectionEntry/mba:updated/mba:mba[@ref = $mba/@name]
     )
 };
-
+(: Gegenstück zur markAsNew-Funktion - wird vom MultiLevelProcessEnvironment aufgerufen :)
 declare updating function mba:removeFromInsertLog($mba as element()) {
   let $dbName := mba:getDatabaseName($mba)
   let $collectionName := mba:getCollectionName($mba)
@@ -534,6 +540,31 @@ declare updating function mba:addBoilerplateElements($mba as element()) {
     if (not ($mba/mba:concretizations)) then
       insert node <mba:concretizations/> into $mba
     else ()
+  (: eventuell bei parallel hierarchies auch nocht leere default-knoten für abstractions, descendants and ancestors:)
   )
 };
+
+
+
+(: Bei beiden insert-Funktionen dürfen nur konsistente MBAs eingefügt werden (die also auch schon Boilerplate-Elements enthalten :)
+(: Diese Funktion kann eigentlich nur für MBAs mit Parallel Hierarchies Sinn, weil nur diese MBAs einen Verweis auf die Parent-MBAs haben. Das muss hier also überprüft werden (Beispiel gibt's in den anderen Funktionen) :)
+(: Beide Funktionen benoetigen ein if zur Unterscheid ob simple oder parallel hierarchy. :)
+declare updating function mba:insert($db as xs:string,
+        $collection as xs:string,
+        $mba as element()) {
+  ()
+};
+
+(: Diese Funktion ist allgemein für Parallel und Simple Hierarchies verwendbar.
+Wenn das übergebene MBA keinen abstractions-Tag hat, dann soll dieser eingefügt werden je nach Information,
+die in $parents enthalten ist. $parents soll die MBA nodes enthalten, also die identity soll hier preserved werden.
+Wir programmieren fast objekt-orientiert, node identity bleibt durch eine selection eines Nodes grundsätzlich erhalten. :)
+declare updating function mba:insert($db as xs:string,
+        $collection as xs:string,
+        $parents as element()*,
+        $mba as element()) {
+  ()
+};
+
+
 
