@@ -114,7 +114,7 @@ declare updating function mba:createMBAse($newDb as xs:string) {
 };
 
 (:~
- : Insert an MBA with a simple hierarchy as a new collection into the database.
+ : Insert an MBA with a simple hierarchy (only for simple hierarchies) as a new collection into the database.
  :
  : @param $db the name of the database.
  : @param $mba an MBA with a simple level hierarchy. 
@@ -137,6 +137,29 @@ declare updating function mba:insertAsCollection($db as xs:string,
     )
   else () (: can only insert MBAs with simple hierarchy as collection :)
 };
+
+(: Funktion zur Erstellung einer Parallel-Hierarchy-Collection
+Zuerst wird createCollection aufgerufen, dann wird mithilfe von insert in die Collection eingefügt :)
+declare updating function mba:createCollection($db as xs:string,
+        $name as xs:string) {
+  let $document        := db:open($db, 'collections.xml')
+  let $collectionName  := $name
+  let $fileName        := 'collections/' || $collectionName || '.xml'
+  let $collectionEntry :=
+    <collection name='{$collectionName}' file="{$fileName}" hierarchy="parallel">
+      <uninitialized/>
+      <updated/>
+    </collection>
+
+  let $collectionFile :=
+    <collection xmlns="http://www.dke.jku.at/MBA" name="{$collectionName}"/>
+
+  return (
+    db:add($db, $collectionFile, $fileName),
+    insert node $collectionEntry into $document/mba:collections
+  )
+};
+
 
 (: Liefert ein neues MBA zurück ohne es einzufügen, dass soll später mit insert passieren.
 Funktioniert bisher nur mit Simple Hiearchies, muss also für Parallel Hierarchies erweitert werden:)
@@ -510,26 +533,25 @@ declare updating function mba:addBoilerPlateElements($mba as element()) {
     if (not ($mba/mba:concretizations)) then
       insert node <mba:concretizations/> into $mba
     else ()
-    (: eventuell bei parallel hierarchies auch nocht leere default-knoten für abstractions, descendants and ancestors:))
+  (: eventuell bei parallel hierarchies auch nocht leere default-knoten für abstractions, descendants and ancestors:)
   )
 };
 
 
-declare updating function mba:createCollection($db as xs:string,
-        $name as xs:string) {
-  ()
-};
 
-
-(: Bei beiden insert-Funktionen dürfen nur konsistente MBAs eingefügt werden (die also auch schon Boilerplate-Elements enthalten :))
+(: Bei beiden insert-Funktionen dürfen nur konsistente MBAs eingefügt werden (die also auch schon Boilerplate-Elements enthalten :)
 (: Diese Funktion kann eigentlich nur für MBAs mit Parallel Hierarchies Sinn, weil nur diese MBAs einen Verweis auf die Parent-MBAs haben. Das muss hier also überprüft werden (Beispiel gibt's in den anderen Funktionen) :)
+(: Beide Funktionen benoetigen ein if zur Unterscheid ob simple oder parallel hierarchy. :)
 declare updating function mba:insert($db as xs:string,
         $collection as xs:string,
         $mba as element()) {
   ()
 };
 
-(: Diese Funktion ist allgemein für Parallel und Simple Hierarchies verwendbar. Wenn das übergebene MBA keinen abstractions-Tag hat, dann soll dieser eingefügt werden je nach Information, die in $parents enthalten ist. $parents soll die MBA nodes enthalten, also die identity soll hier preserved werden. Wir programmieren fast objekt-orientiert, node identity bleibt durch eine selection eines Nodes grundsätzlich erhalten. :)
+(: Diese Funktion ist allgemein für Parallel und Simple Hierarchies verwendbar.
+Wenn das übergebene MBA keinen abstractions-Tag hat, dann soll dieser eingefügt werden je nach Information,
+die in $parents enthalten ist. $parents soll die MBA nodes enthalten, also die identity soll hier preserved werden.
+Wir programmieren fast objekt-orientiert, node identity bleibt durch eine selection eines Nodes grundsätzlich erhalten. :)
 declare updating function mba:insert($db as xs:string,
         $collection as xs:string,
         $parents as element()*,
