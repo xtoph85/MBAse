@@ -531,15 +531,30 @@ declare updating function mba:addBoilerplateElements($mba as element()) {
     else (),
     if (not ($mba/mba:concretizations)) then
       insert node <mba:concretizations/> into $mba
+    else (),
+    if ($mba/@hierarchy = 'parallel') then
+      if (not ($mba/mba:abstractions)) then
+        insert node <mba:abstractions/> into $mba
+      else ()
+    else(),
+    if ($mba/@hierarchy = 'parallel') then
+      if (not ($mba/mba:ancestors)) then
+        insert node <mba:ancestors/> into $mba
+      else ()
+    else (),
+    if ($mba/@hierarchy = 'parallel') then
+      if (not ($mba/mba:descendants)) then
+        insert node <mba:descendants/> into $mba
+      else ()
     else ()
-  (: eventuell bei parallel hierarchies auch nocht leere default-knoten für abstractions, descendants and ancestors:)
   )
 };
 
 
 
 (: Bei beiden insert-Funktionen dürfen nur konsistente MBAs eingefügt werden (die also auch schon Boilerplate-Elements enthalten :)
-(: Diese Funktion kann eigentlich nur für MBAs mit Parallel Hierarchies Sinn, weil nur diese MBAs einen Verweis auf die Parent-MBAs haben. Das muss hier also überprüft werden (Beispiel gibt's in den anderen Funktionen) :)
+(: Diese Funktion kann eigentlich nur für MBAs mit Parallel Hierarchies Sinn, weil nur diese MBAs einen Verweis auf die Parent-MBAs haben.
+Das muss hier also überprüft werden (Beispiel gibt's in den anderen Funktionen) :)
 (: Beide Funktionen benoetigen ein if zur Unterscheid ob simple oder parallel hierarchy. :)
 declare updating function mba:insert($db as xs:string,
         $collection as xs:string,
