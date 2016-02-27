@@ -104,7 +104,8 @@ declare updating function mba:createMBAse($newDb as xs:string) {
     </xs:schema>
   
   let $mbaSchemaFileNameSimple := 'xsd/mba_simple.xsd'
-  
+
+  (: TODO: mbaSchemaParallel anlegen und in xsd serialisieren :)
   
   return db:create(
     $newDb,
@@ -162,13 +163,16 @@ declare updating function mba:createCollection($db as xs:string,
 
 
 
-
+(: TODO: rausfinden ob es ein concretiez für simple & paralell hierarachies geben soll oder getrennte Funktionen :)
 declare function mba:concretize($parents  as element()*,
                                 $name     as xs:string,
                                 $topLevel as xs:string) as element() {
   let $parent := $parents[1]
   
   let $level := $parent/mba:topLevel//mba:childLevel[@name = $topLevel]
+  (: Unterscheidung ob simple oder parallel hierarchy anhand des parent mba
+   parents dürfen nicht miteinander in einer konkretisierungsbeziehung stehen (komplizierter als gedacht)
+    und müssen in derselben collection sein :)
   
   let $concretization :=
     <mba:mba name="{$name}" hierarchy="simple">
@@ -511,6 +515,9 @@ declare updating function mba:removeCurrentEvent($mba as element()) {
   return delete nodes $currentEvent/*
 };
 
+
+(: Liefert ein neues MBA zurück ohne es einzufügen, dass soll später mit insert passieren. :)
+(: TODO: Support für parallel Hierarchien :)
 declare updating function mba:addBoilerplateElements($mba as element()) {
   let $scxml := mba:getSCXML($mba)
   
@@ -541,6 +548,7 @@ declare updating function mba:addBoilerplateElements($mba as element()) {
           insert node <mba:descendants/> into $mba
       else()
     else()
+
     (:)if ($mba/@hierarchy = 'parallel') then
       if (not ($mba/mba:ancestors)) then
         insert node <mba:ancestors/> into $mba
@@ -550,31 +558,36 @@ declare updating function mba:addBoilerplateElements($mba as element()) {
       if (not ($mba/mba:descendants)) then
         insert node <mba:descendants/> into $mba
       else ()
-    else ()
+    else () :)
   )
 };
 
 
 
-(: Bei beiden insert-Funktionen dürfen nur konsistente MBAs eingefügt werden (die also auch schon Boilerplate-Elements enthalten :)
-(: Diese Funktion kann eigentlich nur für MBAs mit Parallel Hierarchies Sinn, weil nur diese MBAs einen Verweis auf die Parent-MBAs haben.
-Das muss hier also überprüft werden (Beispiel gibt's in den anderen Funktionen) :)
-(: Beide Funktionen benoetigen ein if zur Unterscheid ob simple oder parallel hierarchy. :)
-declare updating function mba:insert($db as xs:string,
-        $collection as xs:string,
-        $mba as element()) {
-  ()
-};
-
-(: Diese Funktion ist allgemein für Parallel und Simple Hierarchies verwendbar.
-Wenn das übergebene MBA keinen abstractions-Tag hat, dann soll dieser eingefügt werden je nach Information,
-die in $parents enthalten ist. $parents soll die MBA nodes enthalten, also die identity soll hier preserved werden.
-Wir programmieren fast objekt-orientiert, node identity bleibt durch eine selection eines Nodes grundsätzlich erhalten. :)
-(: Liefert ein neues MBA zurück ohne es einzufügen, dass soll später mit insert passieren.
-Funktioniert bisher nur mit Simple Hiearchies, muss also für Parallel Hierarchies erweitert werden :)
+(: Die insert-Funktion verarbeitet nur konsistente MBAs von parallelen Hierarchien (die also auch schon Boilerplate-Elements enthalten :)
 declare updating function mba:insert($db as xs:string,
         $collection as xs:string,
         $parents as element()*,
         $mba as element()) {
+  let $collectionDocument := mba:getCollection($db, $collection)
+
+  let $mbaName := $mba/@name
+  let $mbaRef := <mba ref='{$mbaName}'/>
+
+  return (
+    insert node $mba into $collectionDocument/collection,
+
+    insert node $mbaRef into $parents/concretizations,
+
+    mba:markAsUninitialized($mba)
+  )
+
+};
+
+declare updating function mba:insertDescendant($mba as element(), $descendant as element()) {
   ()
 };
+
+
+
+(: TODO: insert and getDescendants und :)
