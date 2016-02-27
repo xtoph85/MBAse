@@ -535,9 +535,13 @@ declare updating function mba:addBoilerplateElements($mba as element()) {
     if ($mba/@hierarchy = 'parallel') then
       if (not ($mba/mba:abstractions)) then
         insert node <mba:abstractions/> into $mba
-      else ()
-    else(),
-    if ($mba/@hierarchy = 'parallel') then
+      else if (not ($mba/mba:ancestors)) then
+        insert node <mba:ancestors/> into $mba
+      else if (not ($mba/mba:descendants)) then
+          insert node <mba:descendants/> into $mba
+      else()
+    else()
+    (:)if ($mba/@hierarchy = 'parallel') then
       if (not ($mba/mba:ancestors)) then
         insert node <mba:ancestors/> into $mba
       else ()
