@@ -157,7 +157,7 @@
   <mba name="SocialAndEconomicSciences" hierarchy="´parallel" topLevel="school" isDefault="true"> <!-- was bedeutet isDefault?-->
     <abstractions>
       <mba ref="JohannesKeplerUniversity"/>
-    <abstractions/>
+    </abstractions>
     <concretizations/>
     <ancestors>
       <mba ref="JohannesKeplerUniversity"/>
