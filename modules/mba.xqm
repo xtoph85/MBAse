@@ -180,9 +180,12 @@ declare function mba:concretize($parents  as element()*,
         {$level/*}
       </mba:topLevel>
     </mba:mba>
+
+  let $dbName := mba:getDatabaseName($parent)
+  let $collectionName := mba:getCollectionName($parent)
   
   let $concretization := copy $c := $concretization modify (
-      mba:addBoilerplateElements($c)
+      mba:addBoilerplateElements($c, $dbName, $collectionName)
   ) return $c
   
   return $concretization
@@ -540,7 +543,8 @@ declare updating function mba:removeCurrentEvent($mba as element()) {
 
 (: Liefert ein neues MBA zurück ohne es einzufügen, dass soll später mit insert passieren. :)
 (: TODO: Support für parallel Hierarchien :)
-declare updating function mba:addBoilerplateElements($mba as element()) {
+(: TODO: kann man das auch als nicht update function machen (copy modify etc) :)
+declare updating function mba:addBoilerplateElements($mba as element(), $databaseName as xs:string, $collectionName as xs:string) {
   let $scxml := mba:getSCXML($mba)
   
   return (
@@ -550,8 +554,8 @@ declare updating function mba:addBoilerplateElements($mba as element()) {
     if (not ($scxml/sc:datamodel/sc:data[@id = '_x'])) then
       insert node 
         <sc:data id = "_x">
-          <db xmlns="">{mba:getDatabaseName($mba)}</db>
-          <collection xmlns="">{mba:getCollectionName($mba)}</collection>
+          <db xmlns="">{$databaseName}</db>
+          <collection xmlns="">{$collectionName}</collection>
           <name xmlns="">{fn:string($mba/@name)}</name>
           <currentStatus xmlns=""/>
           <externalEventQueue xmlns=""/>
@@ -587,28 +591,24 @@ declare updating function mba:addBoilerplateElements($mba as element()) {
 
 
 (: Die insert-Funktion verarbeitet nur konsistente MBAs von parallelen Hierarchien (die also auch schon Boilerplate-Elements enthalten :)
-declare updating function mba:insert($db as xs:string,
-        $collection as xs:string,
-        $parents as element()*,
-        $mba as element()) {
+declare updating function mba:insert($db as xs:string, $collection as xs:string, $parents as element()*, $mba as element()) {
   let $collectionDocument := mba:getCollection($db, $collection)
-
   let $mbaName := $mba/@name
   let $mbaRef := <mba ref='{$mbaName}'/>
 
+
   let $mbaWithBoilerPlateElements := copy $c := $mba modify (
-      mba:addBoilerplateElements($c)
+      mba:addBoilerplateElements($c, $db, $collection)
   ) return $c
 
   return (
-
     insert node $mbaWithBoilerPlateElements into $collectionDocument,
 
     if ($parents) then
       insert node $mbaRef into $parents/concretizations
     else(),
 
-    mba:markAsUninitialized($mba)
+    mba:markAsUninitialized($mbaWithBoilerPlateElements)
   )
 
 };
