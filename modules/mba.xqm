@@ -431,9 +431,14 @@ declare updating function mba:enqueueExternalEvent($mba   as element(),
   )
 };
 
+
 declare function mba:getDatabaseName($mba) {
-  let $dbName := db:name($mba)
-  
+  let $dbName :=
+      if (not (db:name($mba))) then
+          mba:getSCXML($mba)/sc:datamodel/sc:data[@id='_x']/db/text()
+      else
+          db:name($mba)
+
   return $dbName
 };
 
