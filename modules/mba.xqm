@@ -216,7 +216,11 @@ declare function mba:getCollection($db             as xs:string,
 };
 
 declare function mba:getTopLevelName($mba as element()) as xs:string { 
-  if($mba/@hierarchy = 'simple') then $mba/mba:topLevel/@name else ()
+  if($mba/@hierarchy = 'simple') then
+      $mba/mba:topLevel/@name
+  else (
+      $mba/@topLevel
+  )
 };
 
 declare function mba:getElementsAtLevel($mba       as element(),
