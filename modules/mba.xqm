@@ -485,7 +485,7 @@ declare updating function mba:markAsUninitialized($mba as element()) {
     $document/mba:collections/mba:collection[@name = $collectionName]
   
   return
-    insert node <mba ref="{$mba/@name}"/> into $collectionEntry/mba:new
+    insert node <mba ref="{$mba/@name}"/> into $collectionEntry/mba:uninitialized
 };
 
 (: Gegenstück zur markAsUpdated-Funktion - wird vom MultiLevelProcessEnvironment aufgerufen :)
