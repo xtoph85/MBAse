@@ -8,6 +8,8 @@ xquery version "3.0";
 :)
 
 import module namespace mba = 'http://www.dke.jku.at/MBA' at 'D:/workspaces/master/MBAse/modules/mba.xqm';
+import module namespace functx = 'http://www.functx.com' at 'D:/workspaces/master/MBAse/modules/functx.xqm';
+import module namespace sc='http://www.w3.org/2005/07/scxml' at 'D:/workspaces/master/MBAse/modules/scxml.xqm';
 
 (: Properties for DB Connection :)
 
@@ -15,9 +17,9 @@ declare variable $db := 'myMBAse';
 
 (:================================================================================================:)
 
-(: Open DB and return complete content - for verifying everything works
+(: Open DB and return complete content - for verifying everything works :)
 let $var := db:open($db)
-return $var :)
+return $var
 
 (:================================================================================================:)
 
@@ -56,7 +58,32 @@ return $parallelCollection :)
 (:================================================================================================:)
 
 
-(: Read mba from external file :)
+(: Read mba from external file
 let $mbaNew := fn:doc('D:/workspaces/master/MBAse/example/JKU-MBA.xml')
-return $mbaNew
+return $mbaNew :)
 
+(:================================================================================================:)
+
+
+(: Insert mba from external file into database
+let $document := fn:doc('D:/workspaces/master/MBAse/example/JKU-MBA-NoBoilerPlateElements.xml')
+let $mbaNew := $document/mba:mba
+let $collection := 'parallelCollection'
+
+let $mbaWithBoilerPlateElements := copy $c := $mbaNew modify (
+    mba:addBoilerplateElements($c, $db, $collection)
+) return $c
+
+let $databaseName := mba:getDatabaseName($mbaWithBoilerPlateElements)
+let $path := db:path($mbaWithBoilerPlateElements)
+
+let $document := db:open($databaseName, 'collections.xml')
+
+
+let $collectionName := mba:getCollectionName($mbaWithBoilerPlateElements)
+
+let $document := db:open($db, 'collections.xml')
+let $collectionEntry := $document/mba:collections/mba:collection[@name = $collectionName]
+
+
+return mba:insert($db, $collection, (), $mbaNew) :)
