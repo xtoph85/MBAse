@@ -17,7 +17,7 @@ declare variable $db := 'myMBAse';
 
 (: Open DB and return complete content - for verifying everything works
 let $var := db:open($db)
-return $var  :)
+return $var :)
 
 (:================================================================================================:)
 
@@ -41,9 +41,10 @@ return $scxml :)
 
 (:================================================================================================:)
 
-
+(: TODO: Find out why there is an error logged - collection is created in database anyway :)
 (: Create a new collection
-return mba:createCollection($db, 'parallelCollection') :)
+let $collectionName := 'anotherParallelCollection'
+return mba:createCollection($db, $collectionName) :)
 
 (:================================================================================================:)
 
@@ -51,7 +52,6 @@ return mba:createCollection($db, 'parallelCollection') :)
 (: Return newly created collection
 let $parallelCollection := mba:getCollection($db, 'parallelCollection')
 return $parallelCollection :)
-
 
 (:================================================================================================:)
 
