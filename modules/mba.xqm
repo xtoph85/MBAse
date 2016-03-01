@@ -27,9 +27,9 @@
  :)
 module namespace mba='http://www.dke.jku.at/MBA';
 
-import module namespace functx = 'http://www.functx.com' at 'functx.xqm';
+import module namespace functx = 'http://www.functx.com' at 'D:/workspaces/master/MBAse/modules/functx.xqm';
 
-import module namespace sc='http://www.w3.org/2005/07/scxml' at 'scxml.xqm';
+import module namespace sc='http://www.w3.org/2005/07/scxml' at 'D:/workspaces/master/MBAse/modules/scxml.xqm';
 
 declare updating function mba:createMBAse($newDb as xs:string) {
   let $dbDimSchemaFileName := 'xsd/collections.xsd'
@@ -229,7 +229,9 @@ declare function mba:getElementsAtLevel($mba       as element(),
     if($mba/@hierarchy = 'simple') then 
       ($mba/mba:topLevel[@name = $levelName],
        $mba/mba:topLevel//mba:childLevel[@name = $levelName])
-    else ()
+    else (
+        $mba/mba:levels//mba:level[@name = $levelName]
+    )
   
   return $level/mba:elements
 };
@@ -290,6 +292,22 @@ declare function mba:getAncestorAtLevel($mba   as element(),
                                         $level as xs:string) as element() {
   if($mba/@hierarchy = 'simple') then
     $mba/ancestor::mba:mba[./mba:topLevel/@name = $level]
+  else if ($mba/@hierarchy = 'parallel') then 
+    let $refNodes := $mba/ancestors/mba
+    let $collectionName := mba:getCollectionName($mba)
+    let $dbName := mba:getDatabaseName($mba)
+
+    let $ancestorAtLevel :=
+      for $node in $refNodes
+        let $fetchedMba := mba:getMBA($dbName, $collectionName, $node/@ref)
+        let $condition := $fetchedMba[mba:getTopLevelName(self) = $level]
+      return $condition 
+    return $ancestorAtLevel
+     (: $mba/ancestors :)
+    (: top-frage: kann es mehrere ancestors auf einem level geben?!) :)
+    (: get list of all ref nodes in ancestors
+       getMba(entry)
+       if level == mbaTopLevel -> return ancestor :)
   else ()
 };
 
@@ -578,10 +596,17 @@ declare updating function mba:insert($db as xs:string,
   let $mbaName := $mba/@name
   let $mbaRef := <mba ref='{$mbaName}'/>
 
-  return (
-    insert node $mba into $collectionDocument/collection,
+  let $mbaWithBoilerPlateElements := copy $c := $mba modify (
+      mba:addBoilerplateElements($c)
+  ) return $c
 
-    insert node $mbaRef into $parents/concretizations,
+  return (
+
+    insert node $mbaWithBoilerPlateElements into $collectionDocument,
+
+    if ($parents) then
+      insert node $mbaRef into $parents/concretizations
+    else(),
 
     mba:markAsUninitialized($mba)
   )
