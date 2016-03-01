@@ -15,8 +15,8 @@
               <sc:data id="description">Medium-sized university in Austria</sc:data>
               <sc:data id="_event"/>
               <sc:data id="_x">
-                <db xmlns="">university</db>
-                <collection xmlns="">JohannesKeplerUniversity</collection>
+                 <db xmlns="">myMBAse</db>
+                <collection xmlns="">parallelCollection</collection>
                 <name xmlns="">JohannesKeplerUniversity</name>
                 <currentStatus xmlns="">
                   <state ref="Accredited"/>
