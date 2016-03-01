@@ -444,7 +444,12 @@ declare function mba:getDatabaseName($mba) {
 
 declare function mba:getCollectionName($mba) {
   let $dbName := mba:getDatabaseName($mba)
-  let $path := db:path($mba)
+  
+  let $path :=
+    if (not (db:path($mba))) then
+        fn:string-join(('collections/', mba:getSCXML($mba)/sc:datamodel/sc:data[@id='_x']/collection/text(), '.xml'), '')
+    else
+      db:path($mba)
   
   let $document := db:open($dbName, 'collections.xml')
     
