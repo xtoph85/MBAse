@@ -459,16 +459,27 @@ declare function mba:getCollectionName($mba) {
   return fn:string($collectionName)
 };
 
+(: Neue Funktion die den collectionEntry (Environment) zur Verfüung stellt :)
+declare function mba:getCollectionEntry($mba as element())  {
+  let $dbName := mba:getDatabaseName($mba)
+  let $collectionName := mba:getCollectionName($mba)
+  let $document := db:open($dbName, 'collections.xml')
+  let $collectionEntry :=  $document/mba:collections/mba:collection[@name = $collectionName]
+
+  return $collectionEntry
+};
+
 
 (: Funktion wird vom MultiLevelProcessEnvironment aufgerufen - soll anzeigen dass ein MBA entweder verändert wurde (Attribut)
  oder wenn ein Event enqued wurde :)
 declare updating function mba:markAsUpdated($mba as element()) {
-  let $dbName := mba:getDatabaseName($mba)
+  (: let $dbName := mba:getDatabaseName($mba)
   let $collectionName := mba:getCollectionName($mba)
   
   let $document := db:open($dbName, 'collections.xml')
   let $collectionEntry := 
-    $document/mba:collections/mba:collection[@name = $collectionName]
+    $document/mba:collections/mba:collection[@name = $collectionName] :)
+  let $collectionEntry := mba:getCollectionEntry($mba)
   
   return
     insert node <mba ref="{$mba/@name}"/> into $collectionEntry/mba:updated
@@ -477,12 +488,13 @@ declare updating function mba:markAsUpdated($mba as element()) {
 (: Funktion wird vom MultiLevelProcessEnvironment aufgerufen - soll anzeigen dass der Lifecycle eines
   neu erstellten MBAs noch nicht begonnen hat - also quasi nur die Schemadaten vorhanden sind, die Objektdaten aber fehlen:)
 declare updating function mba:markAsUninitialized($mba as element()) {
-  let $dbName := mba:getDatabaseName($mba)
+  (: let $dbName := mba:getDatabaseName($mba)
   let $collectionName := mba:getCollectionName($mba)
-  
+
   let $document := db:open($dbName, 'collections.xml')
-  let $collectionEntry := 
-    $document/mba:collections/mba:collection[@name = $collectionName]
+  let $collectionEntry :=
+    $document/mba:collections/mba:collection[@name = $collectionName] :)
+  let $collectionEntry := mba:getCollectionEntry($mba)
   
   return
     insert node <mba ref="{$mba/@name}"/> into $collectionEntry/mba:uninitialized
@@ -490,12 +502,13 @@ declare updating function mba:markAsUninitialized($mba as element()) {
 
 (: Gegenstück zur markAsUpdated-Funktion - wird vom MultiLevelProcessEnvironment aufgerufen :)
 declare updating function mba:removeFromUpdateLog($mba as element()) {
-  let $dbName := mba:getDatabaseName($mba)
+  (: let $dbName := mba:getDatabaseName($mba)
   let $collectionName := mba:getCollectionName($mba)
-  
+
   let $document := db:open($dbName, 'collections.xml')
-  let $collectionEntry := 
-    $document/mba:collections/mba:collection[@name = $collectionName]
+  let $collectionEntry :=
+    $document/mba:collections/mba:collection[@name = $collectionName] :)
+  let $collectionEntry := mba:getCollectionEntry($mba)
   
   return
     delete node functx:first-node(
@@ -508,6 +521,7 @@ declare updating function mba:removeFromInsertLog($mba as element()) {
   let $collectionName := mba:getCollectionName($mba)
   
   let $document := db:open($dbName, 'collections.xml')
+  (: TODO: Fragen ob das Absicht ist dass hier @ref referenziert wird während bei den anderen Funtkionen @name verwendet wird :)
   let $collectionEntry := 
     $document/mba:collections/mba:collection[@ref = $collectionName]
   
