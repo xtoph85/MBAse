@@ -447,7 +447,7 @@ declare function mba:getCollectionName($mba) {
   
   let $path :=
     if (not (db:path($mba))) then
-        fn:string-join(('collections/', mba:getSCXML($mba)/sc:datamodel/sc:data[@id='_x']/collection/text(), '.xml'), '')
+      ('collections/' || mba:getSCXML($mba)/sc:datamodel/sc:data[@id='_x']/collection/text() || '.xml')
     else
       db:path($mba)
   
