@@ -17,9 +17,9 @@ declare variable $db := 'myMBAse';
 
 (:================================================================================================:)
 
-(: Open DB and return complete content - for verifying everything works :)
+(: Open DB and return complete content - for verifying everything works
 let $var := db:open($db)
-return $var
+return $var :)
 
 (:================================================================================================:)
 
@@ -43,37 +43,37 @@ return $scxml :)
 
 (:================================================================================================:)
 
-(: TODO: Find out why there is an error logged - collection is created in database anyway :)
-(: Create a new collection
-let $collectionName := 'anotherParallelCollection'
+(: Create a new collection - note that Exception is logged because there is no return value
+let $collectionName := 'parallelHierarchy'
 return mba:createCollection($db, $collectionName) :)
 
 (:================================================================================================:)
 
 
 (: Return newly created collection
-let $parallelCollection := mba:getCollection($db, 'parallelCollection')
+let $parallelCollection := mba:getCollection($db, 'parallelHierarchy')
 return $parallelCollection :)
 
 (:================================================================================================:)
 
 
 (: Read mba from external file
-let $mbaNew := fn:doc('D:/workspaces/master/MBAse/example/JKU-MBA.xml')
+let $mbaNew := fn:doc('D:/workspaces/master/MBAse/example/JKU-MBA-NoBoilerPlateElements.xml')
 return $mbaNew :)
 
 (:================================================================================================:)
 
 
-(: Insert mba from external file into database
+(: Insert mba from external file into database  :)
 let $document := fn:doc('D:/workspaces/master/MBAse/example/JKU-MBA-NoBoilerPlateElements.xml')
 let $mbaNew := $document/mba:mba
-let $collection := 'parallelCollection'
+let $collection := 'parallelHierarchy'
 
 let $mbaWithBoilerPlateElements := copy $c := $mbaNew modify (
     mba:addBoilerplateElements($c, $db, $collection)
 ) return $c
 
+(:
 let $databaseName := mba:getDatabaseName($mbaWithBoilerPlateElements)
 let $path := db:path($mbaWithBoilerPlateElements)
 
@@ -84,6 +84,8 @@ let $collectionName := mba:getCollectionName($mbaWithBoilerPlateElements)
 
 let $document := db:open($db, 'collections.xml')
 let $collectionEntry := $document/mba:collections/mba:collection[@name = $collectionName]
+let $collectionDocument := mba:getCollection($db, $collection)
 
+return $collectionDocument :)
 
-return mba:insert($db, $collection, (), $mbaNew) :)
+return mba:insert($db, $collection, (), $mbaNew)
