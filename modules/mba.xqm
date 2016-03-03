@@ -586,18 +586,17 @@ declare updating function mba:addBoilerplateElements($mba as element(), $databas
         </sc:data>
       into $scxml/sc:datamodel
     else (),
-    if (not ($mba/mba:concretizations)) then
-      insert node <mba:concretizations/> into $mba
-    else (),
-    if ($mba/@hierarchy = 'parallel') then
-      if (not ($mba/mba:abstractions)) then
-        insert node <mba:abstractions/> into $mba
-      else if (not ($mba/mba:ancestors)) then
-        insert node <mba:ancestors/> into $mba
-      else if (not ($mba/mba:descendants)) then
+    if ($mba/@hierarchy = 'parallel') then (
+        if (not ($mba/mba:abstractions)) then
+          insert node <mba:abstractions/> into $mba
+        else (),
+        if (not ($mba/mba:ancestors)) then
+          insert node <mba:ancestors/> into $mba
+        else (),
+        if (not ($mba/mba:descendants)) then
           insert node <mba:descendants/> into $mba
-      else()
-    else()
+        else ()
+    ) else()
 
     (:)if ($mba/@hierarchy = 'parallel') then
       if (not ($mba/mba:ancestors)) then
