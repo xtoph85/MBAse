@@ -590,6 +590,9 @@ declare updating function mba:addBoilerplateElements($mba as element(), $databas
         if (not ($mba/mba:abstractions)) then
           insert node <mba:abstractions/> into $mba
         else (),
+        if (not ($mba/mba:conretizations)) then
+          insert node <mba:concretizations/> into $mba
+        else (),
         if (not ($mba/mba:ancestors)) then
           insert node <mba:ancestors/> into $mba
         else (),
