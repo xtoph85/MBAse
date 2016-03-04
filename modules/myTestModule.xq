@@ -64,11 +64,12 @@ return $mbaNew :)
 (:================================================================================================:)
 
 
-(: Insert mba from external file into database  :)
+(: Insert mba from external file into database
 let $document := fn:doc('D:/workspaces/master/MBAse/example/JKU-MBA-NoBoilerPlateElements.xml')
 let $mbaNew := $document/mba:mba
 let $collection := 'parallelHierarchy'
 
+(: insert BoilerPlateElements according to parameters :)
 let $mbaWithBoilerPlateElements := copy $c := $mbaNew modify (
     mba:addBoilerplateElements($c, $db, $collection)
 ) return $c
@@ -76,16 +77,42 @@ let $mbaWithBoilerPlateElements := copy $c := $mbaNew modify (
 (:
 let $databaseName := mba:getDatabaseName($mbaWithBoilerPlateElements)
 let $path := db:path($mbaWithBoilerPlateElements)
-
 let $document := db:open($databaseName, 'collections.xml')
-
-
 let $collectionName := mba:getCollectionName($mbaWithBoilerPlateElements)
-
 let $document := db:open($db, 'collections.xml')
 let $collectionEntry := $document/mba:collections/mba:collection[@name = $collectionName]
 let $collectionDocument := mba:getCollection($db, $collection)
 
-return $collectionDocument :)
+return $collectionEntry :)
 
-return mba:insert($db, $collection, (), $mbaNew)
+(: TODO: find out why mba node seems to be not inside collection node after inserting :)
+(: TODO: fino out why there is a duplicated concretization node after calling insert  :)
+return mba:insert($db, $collection, (), $mbaWithBoilerPlateElements) :)
+
+
+(:================================================================================================:)
+
+(: Insert another mba from external file (as descendant) :)
+let $document := fn:doc('D:/workspaces/master/MBAse/example/SocialEconomicSciences-MBA-NoBoilerPlateElements.xml')
+let $mbaNew := $document/mba:mba
+let $collection := 'parallelHierarchy'
+let $parentMbaName := 'JohannesKeplerUniversity'
+let $parent := mba:getMBA($db, $collection, 'JohannesKeplerUniversity')
+
+(: insert BoilerPlateElements according to parameters :)
+let $mbaWithBoilerPlateElements := copy $c := $mbaNew modify (
+    mba:addBoilerplateElements($c, $db, $collection)
+) return $c
+
+
+(:
+let $collectionVar :=
+    db:open($db, 'collections.xml')/mba:collections/mba:collection
+    [@name=$collection]
+let $collection := mba:getCollection($db, $collection)
+let $documentFile := db:open($db, $collectionVar/@file)
+let $searchMBA := $documentFile/mba:mba[@name=$parentMbaName]
+
+return $parent :)
+
+return mba:insert($db, $collection, $parent, $mbaWithBoilerPlateElements)
