@@ -616,10 +616,6 @@ declare updating function mba:addBoilerplateElements($mba as element(), $databas
 (: Die insert-Funktion verarbeitet nur konsistente MBAs von parallelen Hierarchien (die also auch schon Boilerplate-Elements enthalten :)
 declare updating function mba:insert($db as xs:string, $collection as xs:string, $parents as element()*, $mba as element()) {
   let $collectionDocument := mba:getCollection($db, $collection)
-  let $mbaName := $mba/@name
-  let $mbaRef := <mba ref='{$mbaName}'/>
-
-
   let $mbaWithBoilerPlateElements := copy $c := $mba modify (
       mba:addBoilerplateElements($c, $db, $collection)
   ) return $c
@@ -627,8 +623,8 @@ declare updating function mba:insert($db as xs:string, $collection as xs:string,
   return (
     insert node $mbaWithBoilerPlateElements into $collectionDocument,
 
-    if ($parents) then
-      insert node $mbaRef into $parents/concretizations
+    if (not(fn:empty($parents))) then
+      insert node <mba ref="{$mba/@name}"/> into $parents/mba:concretizations
     else(),
 
     mba:markAsUninitialized($mbaWithBoilerPlateElements)
