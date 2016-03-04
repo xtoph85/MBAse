@@ -1,0 +1,83 @@
+<mba xmlns="namespace" xmlns:sync="http://www.dke.jku.at/MBA/Synchronization" xmlns:sc="http://www.w3.org/2005/07/scxml" name="mbaName" hierarchy="parallel" topLevel="theTopLevel" isDefault="true">
+    <abstractions/>
+    <concretizations>
+      <mba ref="anotherMba"/>
+    </concretizations>
+    <ancestors/>
+    <descendants>
+    </descendants>
+    <levels>
+      <level name="theTopLevel"> <!--steht da wirklich nochmal der name des levels soll das a ref auf des topLevel-Attribut des mba sein?-->
+        <elements>
+          <sc:scxml name="modelName">
+            <sc:datamodel>
+              <sc:data id="description">Description of MBA</sc:data>
+              <sc:data id="_event"/>
+              <sc:data id="_x">
+                <db xmlns="">dbName</db>
+                <collection xmlns="">collectionName</collection>
+                <name xmlns="">mbaName</name>
+                <currentStatus xmlns="">
+                  <state ref="stateName"/>
+                </currentStatus>
+                <externalEventQueue xmlns=""/>
+              </sc:data>
+            </sc:datamodel>
+            <sc:initial>
+              <sc:transition target="stateName"/>
+            </sc:initial>
+            <sc:state id="stateName">
+              <sc:transition event="eventName">
+                <!--allowed elements of xmlns:sync -->
+              </sc:transition>
+            </sc:state>
+          </sc:scxml>
+        </elements>
+      </level>
+      <level name="secondLevel">
+        <elements>
+          <sc:scxml name="SecondLevel">
+            <sc:datamodel>
+              <sc:data id="someId"/>
+            </sc:datamodel>
+            <sc:initial>
+              <sc:transition target="secondLevelSte"/>
+            </sc:initial>
+            <sc:state id="secondLevelState1">
+              <sc:transition event="addValue" cond="not $someId/element[name=$_event/data/text()]">
+                <sc:assign location="$someId" expr="&lt;element name='{$_event/data/text()}'/&gt;" type="lastchild"/>
+              </sc:transition>
+              <sc:transition event="removeValue">
+                <sc:assign location="$someId/element[name=$_event/data/text()]" type="delete"/>
+              </sc:transition>
+              <sc:transition event="gotoState2" target="secondLevelState2"/>
+            </sc:state>
+            <sc:state id="secondLevelState2"/>
+          </sc:scxml>
+        </elements>
+        <parentLevels>
+          <!--steht die ref zum parentlevel auch beim TopLevel einer concretization??-->
+          <level ref="university"/>
+        </parentLevels>
+      </level>
+      <level name="thirdlevel">
+         <elements>
+            <sc:scxml name="ThirdLevel">
+              <sc:datamodel>
+                <sc:data id="element"/>
+              </sc:datamodel>
+              <sc:initial>
+                <sc:transition target="thirdLevelState"/>
+              </sc:initial>
+              <sc:state id="thirdLevelState">
+                <sc:transition event="anotherEvent">
+                  <sc:assign location="$element" expr="$_event/data/element/text()"/>
+                </sc:transition>
+            </sc:scxml>
+        </elements>
+        <parentLevels>
+          <level ref="secondLevel"/>
+        </parentLevels>
+      </level>
+    </levels>
+  </mba>
