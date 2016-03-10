@@ -1,0 +1,2 @@
+#use this script to execute all listed test modules - alternative invocation to: basex.bat -t path/to/testModuleDirectory
+TEST D:\workspaces\master\MBAse\test\mbaTest.xqm
