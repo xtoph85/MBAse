@@ -10,10 +10,17 @@ xquery version "3.0";
 import module namespace mba = 'http://www.dke.jku.at/MBA' at 'D:/workspaces/master/MBAse/modules/mba.xqm';
 import module namespace functx = 'http://www.functx.com' at 'D:/workspaces/master/MBAse/modules/functx.xqm';
 import module namespace sc='http://www.w3.org/2005/07/scxml' at 'D:/workspaces/master/MBAse/modules/scxml.xqm';
+import module namespace test='http://www.dke.jku.at/MBA/test' at 'D:/workspaces/master/MBAse/test/mbaTest.xqm';
 
 (: Properties for DB Connection :)
 
 declare variable $db := 'myMBAse';
+
+(:================================================================================================:)
+
+(: Create DB - works only in BaseX client
+mba:createMBAse($db) :)
+
 
 (:================================================================================================:)
 
@@ -64,15 +71,15 @@ return $mbaNew :)
 (:================================================================================================:)
 
 
-(: Insert mba from external file into database
+(: Insert mba from external file into database :)
 let $document := fn:doc('D:/workspaces/master/MBAse/example/JKU-MBA-NoBoilerPlateElements.xml')
 let $mbaNew := $document/mba:mba
 let $collection := 'parallelHierarchy'
 
-(: insert BoilerPlateElements according to parameters :)
+(: insert BoilerPlateElements according to parameters
 let $mbaWithBoilerPlateElements := copy $c := $mbaNew modify (
     mba:addBoilerplateElements($c, $db, $collection)
-) return $c
+) return $c  :)
 
 (:
 let $databaseName := mba:getDatabaseName($mbaWithBoilerPlateElements)
@@ -83,16 +90,16 @@ let $document := db:open($db, 'collections.xml')
 let $collectionEntry := $document/mba:collections/mba:collection[@name = $collectionName]
 let $collectionDocument := mba:getCollection($db, $collection)
 
-return $collectionEntry :)
+return $mbaWithBoilerPlateElements :)
 
 (: TODO: find out why mba node seems to be not inside collection node after inserting :)
-(: TODO: fino out why there is a duplicated concretization node after calling insert  :)
-return mba:insert($db, $collection, (), $mbaWithBoilerPlateElements) :)
+(: TODO: fino out why there is a duplicated concretization node after calling insert :)
+return mba:insert($db, $collection, (), $mbaNew)
 
 
 (:================================================================================================:)
 
-(: Insert another mba from external file (as descendant) :)
+(: Insert another mba from external file (as descendant)
 let $document := fn:doc('D:/workspaces/master/MBAse/example/SocialEconomicSciences-MBA-NoBoilerPlateElements.xml')
 let $mbaNew := $document/mba:mba
 let $collection := 'parallelHierarchy'
@@ -115,4 +122,4 @@ let $searchMBA := $documentFile/mba:mba[@name=$parentMbaName]
 
 return $parent :)
 
-return mba:insert($db, $collection, $parent, $mbaWithBoilerPlateElements)
+return mba:insert($db, $collection, $parent, $mbaWithBoilerPlateElements) :)
