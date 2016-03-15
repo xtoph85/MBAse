@@ -325,18 +325,27 @@ declare function mba:getAncestors($mba   as element()) as element() {
 declare function mba:getDescendants($mba as element()) as element()* {
   if($mba/@hierarchy = 'simple') then
     $mba/descendant::mba:mba
-  else ()
+  else (
+    let $dbName := mba:getDatabaseName($mba)
+    let $collectionNameFromMBA := mba:getCollectionName($mba)
+    let $parallelCollection := mba:getCollection($dbName, $collectionNameFromMBA)
+    let $descendants := ($parallelCollection/mba:mba[./mba:ancestors/mba:mba/@ref=$mba/@name])
+
+    for $descendant in $descendants
+    return ($descendant, mba:getDescendants($descendant))
+  )
 };
 
-declare function mba:getDescendantsAtLevel($mba   as element(),
-                                           $level as xs:string) as element()* {
+declare function mba:getDescendantsAtLevel($mba as element(), $level as xs:string) as element()* {
   if($mba/@hierarchy = 'simple') then
     $mba/descendant::mba:mba[./mba:topLevel/@name = $level]
-  else ()
+  else (
+    let $descendants := mba:getDescendants($mba)
+    return $descendants[@topLevel = $level]
+  )
 };
 
-declare function mba:isInState($mba     as element(),
-                               $stateId as xs:string) as xs:boolean {
+declare function mba:isInState($mba as element(), $stateId as xs:string) as xs:boolean {
   let $currentStatus := mba:getCurrentStatus($mba)
   
   return fn:exists($currentStatus/state[@ref=$stateId])
