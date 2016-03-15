@@ -65,11 +65,11 @@ declare updating function mba:createMBAse($newDb as xs:string) {
       <xs:simpleType name="hierarchyType">
         <xs:restriction base="xs:string">
           <xs:enumeration value="simple"/>
-          <xs:enumeration value="complex"/>
+          <xs:enumeration value="parallel"/>
         </xs:restriction>
       </xs:simpleType>
     </xs:schema>
-    
+  (: TODO: Fragen ob das anpassen des enum value "parallel" statt "complex" in Ordnung ist :)
   let $dbDimContent := 
     <collections 
       xmlns="http://www.dke.jku.at/MBA" 
@@ -629,6 +629,7 @@ declare updating function mba:insert($db as xs:string, $collection as xs:string,
 
 };
 
+(: TODO: diese Funktion wirklich notwendig? kann man doch mithilfe von insert auch erledigen?! :)
 declare updating function mba:insertDescendant($mba as element(), $descendant as element()) {
   ()
 };
