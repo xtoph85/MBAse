@@ -65,13 +65,13 @@ return $parallelCollection :)
 
 
 (: Read mba from external file
-let $mbaNew := fn:doc('D:/workspaces/master/MBAse/example/JKU-MBA-NoBoilerPlateElements.xml')
+let $mbaNew := fn:doc('D:/workspaces/master/MBAse/example/InformationSystems-MBA-NoBoilerPlateElements.xml')
 return $mbaNew :)
 
 (:================================================================================================:)
 
 
-(: Insert mba from external file into database :)
+(: Insert mba from external file into database
 let $document := fn:doc('D:/workspaces/master/MBAse/example/JKU-MBA-NoBoilerPlateElements.xml')
 let $mbaNew := $document/mba:mba
 let $collection := 'parallelHierarchy'
@@ -93,23 +93,22 @@ let $collectionDocument := mba:getCollection($db, $collection)
 return $mbaWithBoilerPlateElements :)
 
 (: TODO: find out why mba node seems to be not inside collection node after inserting :)
-(: TODO: fino out why there is a duplicated concretization node after calling insert :)
-return mba:insert($db, $collection, (), $mbaNew)
+return mba:insert($db, $collection, (), $mbaNew) :)
 
 
 (:================================================================================================:)
 
 (: Insert another mba from external file (as descendant)
-let $document := fn:doc('D:/workspaces/master/MBAse/example/SocialEconomicSciences-MBA-NoBoilerPlateElements.xml')
+let $document := fn:doc('D:/workspaces/master/MBAse/example/SocialAndEconomicSciences-MBA-NoBoilerPlateElements.xml')
 let $mbaNew := $document/mba:mba
 let $collection := 'parallelHierarchy'
 let $parentMbaName := 'JohannesKeplerUniversity'
-let $parent := mba:getMBA($db, $collection, 'JohannesKeplerUniversity')
+let $parent := mba:getMBA($db, $collection, $parentMbaName)
 
-(: insert BoilerPlateElements according to parameters :)
+(: insert BoilerPlateElements according to parameters
 let $mbaWithBoilerPlateElements := copy $c := $mbaNew modify (
     mba:addBoilerplateElements($c, $db, $collection)
-) return $c
+) return $c :)
 
 
 (:
@@ -122,4 +121,33 @@ let $searchMBA := $documentFile/mba:mba[@name=$parentMbaName]
 
 return $parent :)
 
-return mba:insert($db, $collection, $parent, $mbaWithBoilerPlateElements) :)
+return mba:insert($db, $collection, $parent, $mbaNew) :)
+
+
+(:================================================================================================:)
+
+(: Insert another mba from external file (as descendant) (2nd level descendant) :)
+let $document := fn:doc('D:/workspaces/master/MBAse/example/InformationSystems-MBA-NoBoilerPlateElements.xml')
+let $mbaNew := $document/mba:mba
+let $collection := 'parallelHierarchy'
+let $parentMbaName := 'SocialAndEconomicSciences'
+let $parent := mba:getMBA($db, $collection, $parentMbaName)
+
+(: insert BoilerPlateElements according to parameters
+let $mbaWithBoilerPlateElements := copy $c := $mbaNew modify (
+    mba:addBoilerplateElements($c, $db, $collection)
+) return $c :)
+
+
+(:
+let $collectionVar :=
+    db:open($db, 'collections.xml')/mba:collections/mba:collection
+    [@name=$collection]
+let $collection := mba:getCollection($db, $collection)
+let $documentFile := db:open($db, $collectionVar/@file)
+let $searchMBA := $documentFile/mba:mba[@name=$parentMbaName]
+
+return $parent :)
+
+return mba:insert($db, $collection, $parent, $mbaNew)
+
