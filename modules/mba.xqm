@@ -203,7 +203,7 @@ declare function mba:getMBA($db             as xs:string,
     if($collection/@hierarchy = 'simple') then
       $document/descendant-or-self::mba:mba[@name = $mbaName]
     else (
-      $document/mba:mba[@name=$mbaName]
+      $document/descendant-or-self::mba:mba[@name=$mbaName]
     )
   
   return $mba
