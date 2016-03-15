@@ -273,6 +273,8 @@ declare updating function mba:removeSCXML($mba       as element(),
     delete node $elements/sc:scxml[@name = $scxmlName]
 };
 
+
+(: TODO: Support parallel Hierarchies oder remove?? Schütz fragen :)
 declare updating function mba:insertLevel($mba             as element(),
                                           $levelName       as xs:string,
                                           $parentLevelName as xs:string,
@@ -293,33 +295,25 @@ declare updating function mba:insertLevel($mba             as element(),
   return insert node $newLevel into $parentLevel
 };
 
-declare function mba:getAncestorAtLevel($mba   as element(),
+declare function mba:getAncestorsAtLevel($mba   as element(),
                                         $level as xs:string) as element() {
   if($mba/@hierarchy = 'simple') then
     $mba/ancestor::mba:mba[./mba:topLevel/@name = $level]
   else if ($mba/@hierarchy = 'parallel') then 
-    let $refNodes := $mba/ancestors/mba
-    let $collectionName := mba:getCollectionName($mba)
-    let $dbName := mba:getDatabaseName($mba)
-
-    let $ancestorAtLevel :=
-      for $node in $refNodes
-        let $fetchedMba := mba:getMBA($dbName, $collectionName, $node/@ref)
-        let $condition := $fetchedMba[mba:getTopLevelName(self) = $level]
-      return $condition 
-    return $ancestorAtLevel
-     (: $mba/ancestors :)
-    (: top-frage: kann es mehrere ancestors auf einem level geben?!) :)
-    (: get list of all ref nodes in ancestors
-       getMba(entry)
-       if level == mbaTopLevel -> return ancestor :)
+    let $ancestors := mba:getAncestors($mba)
+    return $ancestors[@topLevel = $level]
   else ()
 };
 
-declare function mba:getAncestors($mba   as element()) as element() {
+declare function mba:getAncestors($mba as element()) as element()* {
   if($mba/@hierarchy = 'simple') then
     $mba/ancestor::mba:mba
-  else ()
+  else (
+    let $ancestors := $mba/..//mba:mba[@name = $mba/mba:ancestors/mba:mba/@ref]
+
+    for $ancestor in $ancestors
+      return ($ancestor, mba:getAncestors($ancestor))
+  )
 };
 
 declare function mba:getDescendants($mba as element()) as element()* {
@@ -332,7 +326,7 @@ declare function mba:getDescendants($mba as element()) as element()* {
     let $descendants := ($parallelCollection/mba:mba[./mba:ancestors/mba:mba/@ref=$mba/@name])
 
     for $descendant in $descendants
-    return ($descendant, mba:getDescendants($descendant))
+      return ($descendant, mba:getDescendants($descendant))
   )
 };
 
