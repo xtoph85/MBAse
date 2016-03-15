@@ -605,17 +605,6 @@ declare updating function mba:addBoilerplateElements($mba as element(), $databas
           insert node <mba:descendants/> into $mba
         else ()
     ) else()
-
-    (:)if ($mba/@hierarchy = 'parallel') then
-      if (not ($mba/mba:ancestors)) then
-        insert node <mba:ancestors/> into $mba
-      else ()
-    else (),
-    if ($mba/@hierarchy = 'parallel') then
-      if (not ($mba/mba:descendants)) then
-        insert node <mba:descendants/> into $mba
-      else ()
-    else () :)
   )
 };
 
