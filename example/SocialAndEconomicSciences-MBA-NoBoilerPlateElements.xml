@@ -1,4 +1,4 @@
-<mba  xmlns="http://www.dke.jku.at/MBA" xmlns:sync="http://www.dke.jku.at/MBA/Synchronization" xmlns:sc="http://www.w3.org/2005/07/scxml" name="SocialAndEconomicSciences" hierarchy="´parallel" topLevel="school" isDefault="true"> <!-- was bedeutet isDefault?-->
+<mba  xmlns="http://www.dke.jku.at/MBA" xmlns:sync="http://www.dke.jku.at/MBA/Synchronization" xmlns:sc="http://www.w3.org/2005/07/scxml" name="SocialAndEconomicSciences" hierarchy="parallel" topLevel="school" isDefault="true"> <!-- was bedeutet isDefault?-->
   <abstractions>
   </abstractions>
   <concretizations/>

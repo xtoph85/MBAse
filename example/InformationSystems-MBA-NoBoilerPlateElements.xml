@@ -1,0 +1,143 @@
+<mba xmlns="http://www.dke.jku.at/MBA" xmlns:sync="http://www.dke.jku.at/MBA/Synchronization" xmlns:sc="http://www.w3.org/2005/07/scxml" name="InformationSystems"  hierarchy="parallel" topLevel="program" isDefault="true">
+  <ancestors>
+    <mba ref="SocialAndEconomicSciences"/>
+  </ancestors>
+  <levels>
+    <level name="program">
+      <elements>
+        <sc:scxml name="InformationSystemsProgram">
+          <sc:datamodel>
+            <sc:data id="degree"/>
+            <sc:data id="maxDuration"/>
+          </sc:datamodel>
+          <sc:initial>
+            <sc:transition target="Developing"/>
+          </sc:initial>
+          <sc:state id="Developing">
+            <sc:transition event="setDegree" cond="$_ancestorAtLevelSatisfies('school', '$offeredDegrees/* = &quot;' || $_event/data/degree || '&quot;')">
+              <sc:assign location="$degree" expr="$_event/data/degree/text()"/>
+            </sc:transition>
+            <sc:transition event="addCourse">
+              <sync:newDescendant name="$_event/data/name" level="course" parents="$_event/data/mod/text()"/>
+            </sc:transition>
+            <sc:transition event="done" target="Active"/>
+            <sc:transition event="setMaxDuration">
+              <sc:assign location="$maxDuration" expr="$_event/data/text()"/>
+            </sc:transition>
+            <sc:transition event="addModule">
+              <sync:newDescendant name="$_event/data/name/text()" level="module"/>
+            </sc:transition>
+          </sc:state>
+          <sc:state id="Active">
+            <sc:transition event="discontinue" cond="$_everyDescendantAtLevelIsInState('courseInstance', 'Finished') and $_everyDescendantAtLevelIsInState('courseInstance', 'Graded')" target="Discontinued">
+              <sync:sendDescendants level="course" state="Available" event="end"/>
+              <sync:sendDescendants level="course" state="Planning" event="cancel"/>
+              <sync:sendDescendants level="course" state="Available" event="archive"/>
+            </sc:transition>
+          </sc:state>
+          <sc:state id="Discontinued"/>
+        </sc:scxml>
+      </elements>
+    </level>
+    <level name="module">
+     <elements>
+      <sc:scxml name="InformationSystemsModule">
+        <sc:datamodel>
+          <sc:data id="coordinator"/>
+        </sc:datamodel>
+        <sc:initial>
+          <sc:transition target="Editing"/>
+        </sc:initial>
+        <sc:state id="Scheduling">
+          <sc:transition event="setCoordinator">
+            <sc:assign location="$coordinator" expr="$_event/data/text()"/>
+          </sc:transition>
+          <sc:transition event="release" target="Ready"/>
+        </sc:state>
+        <sc:state id="Ready"/>
+      </sc:scxml>
+    </elements>
+    <parentLevels>
+      <level ref="program"/>
+    </parentLevels>
+  </level>
+  <level name="course">
+    <elements>
+      <sc:scxml name="InformationSystemsCourse">
+        <sc:datamodel>
+          <sc:data id="credits"/>
+          <sc:data id="duration"/>
+        </sc:datamodel>
+        <sc:initial>
+          <sc:transition target="Scheduling"/>
+        </sc:initial>
+        <sc:state id="Planning">
+          <sc:transition event="cancel" target="Unavailable"/>
+          <sc:state id="Scheduling">
+            <sc:transition event="setDuration" cond="$_ancestorAtLevelSatisfies('program', '$maxDuration &gt;= ' || $_event/data/text())">
+              <sc:assign location="$duration" expr="$_event/data/text()"/>
+            </sc:transition>
+            <sc:transition event="offer.early" target="Available"/>
+            <sc:transition event="release" target="Ready"/>
+          </sc:state>
+          <sc:state id="Ready">
+            <sc:transition event="offer.late" target="Available"/>
+          </sc:state>
+        </sc:state>
+        <sc:state id="Available">
+          <sc:transition event="addCourseInstance">
+            <sync:newDescendant level="courseInstance" name="$_event/data/name/text()"/>
+          </sc:transition>
+          <sc:transition event="end" target="Ended"/>
+        </sc:state>
+        <sc:state id="Unavailable">
+          <sc:state id="Ended">
+            <sc:transition event="archive" target="Archived"/>
+          </sc:state>
+          <sc:state id="Archived"/>
+        </sc:state>
+      </sc:scxml>
+    </elements>
+    <parentLevels>
+      <level ref="module"/>
+    </parentLevels>
+  </level>
+  <level name="courseInstance">
+   <elements>
+    <sc:scxml name="SocialAndEconomicSciencesCourseInstance">
+      <sc:datamodel>
+        <sc:data id="startDate"/>
+        <sc:data id="dropoutDate"/>
+      </sc:datamodel>
+      <sc:initial>
+        <sc:transition target="Enrollment"/>
+      </sc:initial>
+      <sc:state id="Enrollment">
+        <sc:transition event="setStartDate">
+          <sc:assign location="$duration" expr="$_event/data/text()"/>
+        </sc:transition>
+        <sc:transition event="setDropoutDate">
+          <sc:assign location="$dropoutDate" expr="$_event/data/text()"/>
+        </sc:transition>
+        <sc:transition event="start" target="InProgress"/>
+      </sc:state>
+      <sc:state id="InProgress">
+        <sc:transition event="finish" target="Finished"/>
+      </sc:state>
+      <sc:state id="Finished">
+        <sc:initial>
+          <sc:transition target="Held"/>
+        </sc:initial>
+        <sc:state id="Held">
+          <sc:transition target="Graded" event="issueCertificates"/>
+        </sc:state>
+        <sc:state id="Graded"/>
+      </sc:state>
+    </sc:scxml>
+  </elements>
+  <parentLevels>
+    <level ref="course"/>
+  </parentLevels>
+</level>
+</levels>
+</mba>
