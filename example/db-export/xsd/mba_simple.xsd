@@ -1,0 +1,18 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.dke.jku.at/MBA" xmlns:mba="http://www.dke.jku.at/MBA" xmlns:sc="http://www.w3.org/2005/07/scxml" targetNamespace="http://www.dke.jku.at/MBA" elementFormDefault="qualified" attributeFormDefault="unqualified">
+  <xs:element name="mba">
+    <xs:complexType>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+      <xs:attribute name="hierarchy" type="hierarchyType" use="required" default="simple"/>
+      <xs:sequence>
+        <xs:element name="topLevel" minOccurs="1" maxOccurs="1">
+          <xs:complexType/>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:simpleType name="hierarchyType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="simple"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>
