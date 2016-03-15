@@ -26,10 +26,21 @@ declare %unit:test('expected', "err:XPTY0004") function mbaTest:add() {
     123 + 'strings and integers cannot be added'
 };
 
+
+(: CREATE DB myMBAse D:/Uni/Master/database/XML.zip :)
+
+(: Unit-Test HOW-TO:
+    - before-module: import existing example db (from folder or zip file)
+    - before-test("someTest"): execute updating operations
+    - test: execute read-only operations & unit:assert-equals("..")
+    - after-test: restore DB from Backup or reimport (for every test) :)
+
+(: TODO: besprechen wie man das lösen könnte. aufgrund der existierenden einschränkungen geht das so nicht :)
 declare %updating %unit:before-module  function mbaTest:createTestDB() {
     let $db := db:list()[matches(.,'^'||$mbaTest:db||'$')]
     return if (fn:empty($db)) then (
-        (mba:createMBAse($db), mbaTest:createBackup())
+        (mba:createMBAse($mbaTest:db),
+         mbaTest:createBackup())
     ) else((
         db:drop($db),
         mba:createMBAse($db),
@@ -65,5 +76,5 @@ declare %updating %unit:test function mbaTest:testInsertMBA() {
 
     return (
         mba:insert($mbaTest:db, $mbaTest:collectionName, (), $mbaNew),
-        unit:assert-equals(mba:getMBA($mbaTest:db, $mbaTest:collectionName, 'JohannesKeplerUniversity'), $mbaWithBoilerPlateElements))
+        unit:assert-equals(functx:node-kind(mba:getMBA($mbaTest:db, $mbaTest:collectionName, 'JohannesKeplerUniversity')), functx:node-kind($mbaWithBoilerPlateElements)))
 };
