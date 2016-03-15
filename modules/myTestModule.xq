@@ -65,7 +65,7 @@ return $parallelCollection :)
 
 
 (: Read mba from external file
-let $mbaNew := fn:doc('D:/workspaces/master/MBAse/example/InformationSystems-MBA-NoBoilerPlateElements.xml')
+let $mbaNew := fn:doc('D:/workspaces/master/MBAse/example/Medical-MBA-NoBoilerPlateElements.xml')
 return $mbaNew :)
 
 (:================================================================================================:)
@@ -98,7 +98,7 @@ return mba:insert($db, $collection, (), $mbaNew) :)
 
 (:================================================================================================:)
 
-(: Insert another mba from external file (as descendant)
+(: Insert another mba from external file (as descendant) - SoWi
 let $document := fn:doc('D:/workspaces/master/MBAse/example/SocialAndEconomicSciences-MBA-NoBoilerPlateElements.xml')
 let $mbaNew := $document/mba:mba
 let $collection := 'parallelHierarchy'
@@ -126,7 +126,7 @@ return mba:insert($db, $collection, $parent, $mbaNew) :)
 
 (:================================================================================================:)
 
-(: Insert another mba from external file (as descendant) (2nd level descendant) :)
+(: Insert another mba from external file (as descendant) (2nd level descendant)
 let $document := fn:doc('D:/workspaces/master/MBAse/example/InformationSystems-MBA-NoBoilerPlateElements.xml')
 let $mbaNew := $document/mba:mba
 let $collection := 'parallelHierarchy'
@@ -149,5 +149,31 @@ let $searchMBA := $documentFile/mba:mba[@name=$parentMbaName]
 
 return $parent :)
 
-return mba:insert($db, $collection, $parent, $mbaNew)
+return mba:insert($db, $collection, $parent, $mbaNew)  :)
 
+(:================================================================================================:)
+
+(: Insert another mba from external file (as descendant) - Medical  :)
+let $document := fn:doc('D:/workspaces/master/MBAse/example/Medical-MBA-NoBoilerPlateElements.xml')
+let $mbaNew := $document/mba:mba
+let $collection := 'parallelHierarchy'
+let $parentMbaName := 'JohannesKeplerUniversity'
+let $parent := mba:getMBA($db, $collection, $parentMbaName)
+
+(: insert BoilerPlateElements according to parameters
+let $mbaWithBoilerPlateElements := copy $c := $mbaNew modify (
+    mba:addBoilerplateElements($c, $db, $collection)
+) return $c :)
+
+
+(:
+let $collectionVar :=
+    db:open($db, 'collections.xml')/mba:collections/mba:collection
+    [@name=$collection]
+let $collection := mba:getCollection($db, $collection)
+let $documentFile := db:open($db, $collectionVar/@file)
+let $searchMBA := $documentFile/mba:mba[@name=$parentMbaName]
+
+return $parent :)
+
+return mba:insert($db, $collection, $parent, $mbaNew)
