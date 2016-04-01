@@ -320,10 +320,11 @@ declare function mba:getDescendants($mba as element()) as element()* {
   if($mba/@hierarchy = 'simple') then
     $mba/descendant::mba:mba
   else (
-    let $dbName := mba:getDatabaseName($mba)
+    (: let $dbName := mba:getDatabaseName($mba)
     let $collectionNameFromMBA := mba:getCollectionName($mba)
     let $parallelCollection := mba:getCollection($dbName, $collectionNameFromMBA)
-    let $descendants := ($parallelCollection/mba:mba[./mba:ancestors/mba:mba/@ref=$mba/@name])
+    let $descendants := $parallelCollection/mba:mba[./mba:ancestors/mba:mba/@ref=$mba/@name] :)
+    let $descendants := $mba/../mba:mba[./mba:ancestors/mba:mba/@ref=$mba/@name]
 
     for $descendant in $descendants
       return ($descendant, mba:getDescendants($descendant))
