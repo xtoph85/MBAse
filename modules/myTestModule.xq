@@ -26,7 +26,7 @@ mba:createMBAse($db) :)
 
 (: Open DB and return complete content - for verifying everything works
 let $var := db:open($db)
-return $var :)
+return $var  :)
 
 (:================================================================================================:)
 
@@ -193,7 +193,7 @@ return mba:insert($db, $collection, (), $mbaNew) :)
 
 (:================================================================================================:)
 
-(: Insert another mba from external file (as descendant) - Physics :)
+(: Insert another mba from external file (as descendant) - Physics
 let $document := fn:doc('D:/workspaces/master/MBAse/example/Physics-MBA-NoBoilerPlateElements.xml')
 let $mbaNew := $document/mba:mba
 let $collection := 'parallelHierarchy'
@@ -216,4 +216,56 @@ let $searchMBA := $documentFile/mba:mba[@name=$parentMbaName]
 
 return $parent :)
 
-return mba:insert($db, $collection, $parent, $mbaNew)
+return mba:insert($db, $collection, $parent, $mbaNew)  :)
+
+(:================================================================================================:)
+
+(: Concretize parallel hierarchies :)
+
+(: check if 1 oder 2 parent elemente angegeben:)
+
+(: falls 1 parent element:
+
+     1. check if $topLevel valider level von $parent
+     2. wurden alle $parents (Eventuell parallel level) angegeben?
+        -> falls nein: füge fehlende parallele levels hinzu (rekursion)
+     3. ist $topLevel der zweite level von $parent?
+   :)
+
+(: falls 2 parent elemente:
+
+     1. check if $topLevel valider level von $parents
+     2. wurden alle $parents (Eventuell parallel level) angegeben?
+        -> falls nein: füge fehlende parallel leves hinzu (rekursion)
+     3. sind alle $parents teil derselben collection?
+     4. haben die ancestors aller parents denselben toplevel?
+     5. ist $toplevel der zweite level aller $parents?
+  :)
+
+(: in jedem fall:
+
+    1. alle levels des neuen mbas ermitteln
+    2. parentLevel-Element des neuen toplevel-Elements entfernen
+    3. füge ancestor-referenzen zu den parents hinzu
+    4. addBoilerPlateElements
+    5. return mba (nicht in db einfügen)
+
+  :)
+
+let $collectionName := 'parallelHierarchy'
+let $topLevel := 'module'
+
+let $mbaIS := mba:getMBA($db, $collectionName, "InformationSystems")
+let $mbaMedical := mba:getMBA($db, $collectionName, "Medical")
+let $mbaPhysics := mba:getMBA($db, $collectionName, "Physics")
+
+
+let $parents := ($mbaIS, $mbaMedical)
+
+let $validLevel :=
+    every $parent in $parents satisfies
+        mba:hasLevel($parent, $topLevel)
+
+return mba:hasLevel($mbaIS, 'module22')
+
+

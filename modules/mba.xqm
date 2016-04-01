@@ -191,7 +191,71 @@ declare function mba:concretize($parents  as element()*,
   return $concretization
 };
 
-declare function mba:getLevel($mba as element(), $level as xs:string) as xs:element {
+declare function mba:concretizeParallel($parents as element()*, $name as xs:string, $topLevel as xs:string) as element() {
+(: check if 1 oder 2 parent elemente angegeben:)
+
+(: fn:count($parents) :)
+
+  (: 1. Find out if $level is a valid level in all $parents :)
+  let $validLevel :=
+    every $parent in $parents satisfies
+    mba:hasLevel($parent, $topLevel)
+
+
+  return if ($validLevel) then (
+    (: 2. Check if 2 parents have been specified in case of parallel levels :)
+    let $noOfParents := fn:count($parents)
+
+    let $parentDirectAncestors :=
+      for $parent in $parents
+        return mba:getDirectAncestors($parent)
+
+    let $secondLevels :=
+      distinct-values(
+        for $grandPa in $parentDirectAncestors
+          return mba:getSecondLevel($grandPa)/@name/data()
+      )
+
+    return if (count($noOfParents) = count($secondLevels)) then (
+      (: 3. Check if all parents are in the same collection :)
+      let $collectionNames :=
+        for $parent in $parents
+          return mba:getCollectionName($parent)
+
+      return if (count(distinct-values($collectionNames)) = 1) then (
+        (: 4. Check if ancestors of all parents have they same toplevel :)
+        let $grandPaTopLevels := $parentDirectAncestors/@toplevel/data()
+
+        return if (every $grandPaTopLevel in $grandPaTopLevels satisfies $grandPaTopLevel = $grandPaTopLevels[1]) then (
+          (: 5. Check if $topLevel is the second level of all $parents :)
+          if (every $parent in $parents satisfies functx:is-value-in-sequence($topLevel, mba:getSecondLevel($parent)/@name/data())) then (
+
+          ) else (
+            (: 5. $topLevel is not the second level of all $parents - generate MBA's for levels in between :)
+            (: mba:concretizeParallel(parent, universityGenName, parentSecondLevel),
+            mba:concretizeParallel(universityGenMba, name, $topLevel) :)
+          )
+
+        ) else (
+          (: 4. Ancestors of parents have different toplevel - abort :)
+        )
+      ) else (
+        (: 3. parents are in different collections - abort :)
+
+      )
+
+    ) else (
+      (: 2. some parallel level is missing - find out which and call recursion :)
+    )
+
+  ) else (()
+  (: 1. stop because $topLevel is not a valid level in all $parents :)
+  )
+
+};
+
+
+declare function mba:getLevel($mba as element(), $level as xs:string) as element()* {
   let $level :=
     if($mba/@hierarchy = 'simple') then
       ($mba/mba:topLevel[@name = $level],
@@ -202,15 +266,19 @@ declare function mba:getLevel($mba as element(), $level as xs:string) as xs:elem
   return $level
 };
 
-declare function mba:hasLevel($mba as element(), $level as xs:string) as xs:boolean {
-  let $level:= mba:getLevel($mba, $level)
-
-  return
-    if (fn:empty($level)) then
-      fn:false()
+declare function mba:getSecondLevel($mba as element()) as element()* {
+  let $level :=
+    if ($mba/@hierarchy = 'simple') then
+      (: TODO: test if this works for simply hierarchies :)
+      $mba/mba:topLevel/mba:childLevel
     else (
-      fn:true()
+      $mba/mba:levels//mba:level[./mba:parentLevels/mba:level/@ref = $mba/@topLevel/data()]
     )
+  return $level
+};
+
+declare function mba:hasLevel($mba as element(), $level as xs:string) as xs:boolean {
+  not(fn:empty(mba:getLevel($mba, $level)))
 };
 
 declare function mba:getMBA($db             as xs:string,
@@ -329,6 +397,15 @@ declare function mba:getAncestors($mba as element()) as element()* {
 
     for $ancestor in $ancestors
       return ($ancestor, mba:getAncestors($ancestor))
+  )
+};
+
+declare function mba:getDirectAncestors($mba as element()) as element()* {
+  if($mba/@hierarchy = 'simple') then
+    $mba/ancestor::mba:mba
+  else (
+    let $ancestors := $mba/..//mba:mba[@name = $mba/mba:ancestors/mba:mba/@ref]
+    return $ancestors
   )
 };
 
