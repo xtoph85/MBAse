@@ -191,6 +191,28 @@ declare function mba:concretize($parents  as element()*,
   return $concretization
 };
 
+declare function mba:getLevel($mba as element(), $level as xs:string) as xs:element {
+  let $level :=
+    if($mba/@hierarchy = 'simple') then
+      ($mba/mba:topLevel[@name = $level],
+      $mba/mba:topLevel//mba:childLevel[@name = $level])
+    else (
+      $mba/mba:levels//mba:level[@name = $level]
+    )
+  return $level
+};
+
+declare function mba:hasLevel($mba as element(), $level as xs:string) as xs:boolean {
+  let $level:= mba:getLevel($mba, $level)
+
+  return
+    if (fn:empty($level)) then
+      fn:false()
+    else (
+      fn:true()
+    )
+};
+
 declare function mba:getMBA($db             as xs:string,
                             $collectionName as xs:string,
                             $mbaName        as xs:string) {
@@ -230,14 +252,8 @@ declare function mba:getTopLevelName($mba as element()) as xs:string {
 
 declare function mba:getElementsAtLevel($mba       as element(),
                                         $levelName as xs:string) as element()* { 
-  let $level :=
-    if($mba/@hierarchy = 'simple') then 
-      ($mba/mba:topLevel[@name = $levelName],
-       $mba/mba:topLevel//mba:childLevel[@name = $levelName])
-    else (
-        $mba/mba:levels//mba:level[@name = $levelName]
-    )
-  
+  let $level := mba:getLevel($mba, $levelName)
+
   return $level/mba:elements
 };
 
