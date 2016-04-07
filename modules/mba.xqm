@@ -191,6 +191,45 @@ declare function mba:concretize($parents  as element()*,
   return $concretization
 };
 
+
+declare function mba:concretizeParallel2($parents as element()*, $name as xs:string, $topLevel as xs:string) as element() {
+(: 1. Find out if $level is a valid level in all $parents :)
+  let $validLevel :=
+    every $parent in $parents satisfies
+    mba:hasLevel($parent, $topLevel)
+
+  return if ($validLevel) then (
+    (: 2. Check if $topLevel is second level of $parents :)
+    let $parentSecondLevels :=
+      distinct-values(
+           for $parent in $parents
+           return mba:getSecondLevel($parent)/@name/data()
+      )
+
+    return if (functx:is-value-in-sequence($topLevel, $parentSecondLevels)) then (
+      (: TODO: makeTheConcretization!! :)
+    ) else (
+      (: 2. $topLevel is NOT second level of $parents ->
+         3. check if there are default descendants on second level of $parents :)
+
+      let $secondLevelDefaultDescendants :=
+      for $parent in $parents
+        return if (fn:empty(mba:getDescendantsAtLevel($parent, (mba:getSecondLevel($parent)/@name/data()))[@isDefault = true()])) then (
+          (: there are no default descendants for second level -> they need to be created :)
+          (: TODO: recursion call - maybe with copy modify?
+            something like concretize($parent, string-join("default", mba:getSecondLevel($parent)/@name/data(), "Object"), mba:getSecondLevel($parent)/@name/data()) :)
+            mba:concretizeParallel2($parent, string-join("default", mba:getSecondLevel($parent)/@name/data(), "Object"), mba:getSecondLevel($parent)/@name/data())
+        ) else (
+          (: there are default descendants - just return them :)
+          mba:getDescendantsAtLevel($parent, (mba:getSecondLevel($parent)/@name/data()))[@isDefault = true()]
+        )
+      return mba:concretizeParallel2($secondLevelDefaultDescendants, $name, $topLevel)
+    )
+  ) else (
+    (: 1. stop because $topLevel is not a valid level in all $parents :)
+  )
+};
+
 declare function mba:concretizeParallel($parents as element()*, $name as xs:string, $topLevel as xs:string) as element() {
 (: check if 1 oder 2 parent elemente angegeben:)
 
