@@ -191,8 +191,9 @@ declare function mba:concretize($parents  as element()*,
   return $concretization
 };
 
+(:call concretizeParallel2(IsMBa, "CoreCompetenceDKE", "module") :)
 
-declare function mba:concretizeParallel2($parents as element()*, $name as xs:string, $topLevel as xs:string) as element() {
+declare function mba:concretizeParallel2($parents as element()*, $name as xs:string, $topLevel as xs:string) as element()* {
 (: 1. Find out if $level is a valid level in all $parents :)
   let $validLevel :=
     every $parent in $parents satisfies
@@ -207,7 +208,38 @@ declare function mba:concretizeParallel2($parents as element()*, $name as xs:str
       )
 
     return if (functx:is-value-in-sequence($topLevel, $parentSecondLevels)) then (
-      (: TODO: makeTheConcretization!! :)
+      (: make concretization :)
+      let $parentLevel := functx:remove-elements(
+                            functx:first-node(
+                                    mba:getLevel($parents[1], $topLevel)
+                            ), 'parentLevels')
+
+      let $levelNames :=  mba:getNonTopLevels($parents[1])/@name/data()
+      let $subLevels :=
+        for $x in 2 to fn:count($levelNames)
+          return mba:getLevel($parents[1], $levelNames[$x]) (: what about the levels of the possible other parent? merge?:)
+
+      let $ancestorRefs :=
+        if (fn:count($parents) = 1) then (
+          <mba ref="{$parents/@name/data()}"/>
+        ) else (
+          <mba ref="{$parents[1]/@name/data()}"/>,
+          <mba ref="{$parents[2]/@name/data()}"/>
+        )
+
+      let $concretization :=
+        <mba xmlns="http://www.dke.jku.at/MBA" xmlns:sync="http://www.dke.jku.at/MBA/Synchronization" xmlns:sc="http://www.w3.org/2005/07/scxml" name="{$name}" topLevel="{$topLevel}" hierarchy="parallel" isDefault="true">
+          <levels>
+            {$parentLevel}
+            {$subLevels}
+          </levels>
+          <ancestors>
+            {$ancestorRefs}
+          </ancestors>
+        </mba>
+
+      return $concretization
+
     ) else (
       (: 2. $topLevel is NOT second level of $parents ->
          3. check if there are default descendants on second level of $parents :)
