@@ -248,16 +248,18 @@ declare function mba:concretizeParallel2($parents as element()*, $name as xs:str
 
       let $secondLevelDefaultDescendants :=
       for $parent in $parents
-        return if (fn:empty(mba:getDescendantsAtLevel($parent, (mba:getSecondLevel($parent)/@name/data()))[@isDefault = true()])) then (
-          (: there are no default descendants for second level -> they need to be created :)
-          (: TODO: recursion call - maybe with copy modify?
-            something like concretize($parent, string-join("default", mba:getSecondLevel($parent)/@name/data(), "Object"), mba:getSecondLevel($parent)/@name/data()) :)
-            mba:concretizeParallel2($parent, concat("default", mba:getSecondLevel($parent)/@name/data(), "Object"), mba:getSecondLevel($parent)/@name/data())
-        ) else (
+        let $secondLevels := mba:getSecondLevel($parent)/@name/data()
+        for $secondLevel in $secondLevels
+          return if (fn:empty(mba:getDescendantsAtLevel($parent, $secondLevel)[@isDefault = true()])) then (
+            (: there are no default descendants for second level -> they need to be created :)
+            (: TODO: recursion call - maybe with copy modify?
+              something like concretize($parent, string-join("default", mba:getSecondLevel($parent)/@name/data(), "Object"), mba:getSecondLevel($parent)/@name/data()) :)
+             mba:concretizeParallel2($parent, concat("default", $secondLevel, "Object"), mba:getSecondLevel($parent)/@name/data())
+         ) else (
           (: there are default descendants - just return them :)
-          for $secondLevel in (mba:getSecondLevel($parent)/@name/data())
-            return mba:getDescendantsAtLevel($parent, $secondLevel)[@isDefault = true()]
-        )
+          (: for $secondLevel in $secondLevels :)
+              mba:getDescendantsAtLevel($parent, $secondLevel)[@isDefault = true()]
+          )
       return mba:concretizeParallel2($secondLevelDefaultDescendants, $name, $topLevel)
     )
   ) else (
