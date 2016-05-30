@@ -255,7 +255,8 @@ declare function mba:concretizeParallel2($parents as element()*, $name as xs:str
             mba:concretizeParallel2($parent, concat("default", mba:getSecondLevel($parent)/@name/data(), "Object"), mba:getSecondLevel($parent)/@name/data())
         ) else (
           (: there are default descendants - just return them :)
-          mba:getDescendantsAtLevel($parent, (mba:getSecondLevel($parent)/@name/data()))[@isDefault = true()]
+          for $secondLevel in (mba:getSecondLevel($parent)/@name/data())
+            return mba:getDescendantsAtLevel($parent, $secondLevel)[@isDefault = true()]
         )
       return mba:concretizeParallel2($secondLevelDefaultDescendants, $name, $topLevel)
     )
