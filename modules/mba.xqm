@@ -215,9 +215,11 @@ declare function mba:concretizeParallel2($parents as element()*, $name as xs:str
                             ), 'parentLevels')
 
       let $levelNames :=  mba:getNonTopLevels($parents[1])/@name/data()
+      let $subLevelNames := functx:value-except($levelNames, $parentSecondLevels)
+
       let $subLevels :=
-        for $x in 2 to fn:count($levelNames)
-          return mba:getLevel($parents[1], $levelNames[$x]) (: what about the levels of the possible other parent? merge?:)
+        for $x in $subLevelNames
+        return mba:getLevel($parents[1], $x) (: what about the levels of the possible other parent? merge?:)
 
       let $ancestorRefs :=
         if (fn:count($parents) = 1) then (
