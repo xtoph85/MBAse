@@ -245,7 +245,6 @@ declare function mba:concretizeParallel2($parents as element()*, $name as xs:str
     ) else (
       (: 2. $topLevel is NOT second level of $parents ->
          3. check if there are default descendants on second level of $parents :)
-
       let $secondLevelDefaultDescendants :=
       for $parent in $parents
         let $secondLevels := mba:getSecondLevel($parent)/@name/data()
