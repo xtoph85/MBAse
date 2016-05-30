@@ -256,7 +256,7 @@ declare function mba:concretizeParallel2($parents as element()*, $name as xs:str
             (: there are no default descendants for second level -> they need to be created :)
             (: TODO: recursion call - maybe with copy modify?
               something like concretize($parent, string-join("default", mba:getSecondLevel($parent)/@name/data(), "Object"), mba:getSecondLevel($parent)/@name/data()) :)
-             mba:concretizeParallel2($parent, concat("default", $secondLevel, "Object"), mba:getSecondLevel($parent)/@name/data())
+             mba:concretizeParallel2($parent, concat("default", $secondLevel, "Object"), $secondLevel)
          ) else (
           (: there are default descendants - just return them :)
           (: for $secondLevel in $secondLevels :)
