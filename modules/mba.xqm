@@ -206,8 +206,11 @@ declare function mba:concretizeParallel2($parents as element()*, $name as xs:str
            for $parent in $parents
            return mba:getSecondLevel($parent)/@name/data()
       )
+    let $topLevelIsSecondLevelOfAllParents :=
+      every $parent in $parents
+        satisfies functx:is-value-in-sequence($topLevel,mba:getSecondLevel($parent)/@name/data())
 
-    return if (functx:is-value-in-sequence($topLevel, $parentSecondLevels)) then (
+    return if ($topLevelIsSecondLevelOfAllParents) then (
       (: make concretization :)
       let $parentLevel := functx:remove-elements(
                             functx:first-node(
