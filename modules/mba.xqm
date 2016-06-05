@@ -193,83 +193,115 @@ declare function mba:concretize($parents  as element()*,
 
 (:call concretizeParallel2(IsMBa, "CoreCompetenceDKE", "module") :)
 
-declare function mba:concretizeParallel2($parents as element()*, $name as xs:string, $topLevel as xs:string) as element()* {
+declare function mba:concretizeParallel($parents as element()*, $name as xs:string, $topLevel as xs:string) as element()* {
+  mba:concretizeParallelAccumulator($parents, $name, $topLevel, ())
+};
+
+declare function mba:concretizeParallelAccumulator($parents as element()*, $name as xs:string, $topLevel as xs:string, $objectsCreated as element()*) as element()* {
 (: 1. Find out if $level is a valid level in all $parents :)
   let $validLevel :=
     every $parent in $parents satisfies
     mba:hasLevel($parent, $topLevel)
 
+  let $numberOfParents := fn:count($parents)
+
   return if ($validLevel) then (
-    (: 2. Check if $topLevel is second level of $parents :)
-    let $parentSecondLevels :=
-      distinct-values(
-           for $parent in $parents
-           return mba:getSecondLevel($parent)/@name/data()
-      )
-    let $topLevelIsSecondLevelOfAllParents :=
-      every $parent in $parents
-        satisfies functx:is-value-in-sequence($topLevel,mba:getSecondLevel($parent)/@name/data())
-
-    return if ($topLevelIsSecondLevelOfAllParents) then (
-      (: make concretization :)
-      let $parentLevel := functx:remove-elements(
-                            functx:first-node(
-                                    mba:getLevel($parents[1], $topLevel)
-                            ), 'parentLevels')
-
-      let $levelNames :=  mba:getNonTopLevels($parents[1])/@name/data()
-      let $subLevelNames := functx:value-except($levelNames, $parentSecondLevels)
-
-      let $subLevels :=
-        for $x in $subLevelNames
-        return mba:getLevel($parents[1], $x) (: what about the levels of the possible other parent? merge?:)
-
-      let $ancestorRefs :=
-        if (fn:count($parents) = 1) then (
-          <mba ref="{$parents/@name/data()}"/>
-        ) else (
-          <mba ref="{$parents[1]/@name/data()}"/>,
-          <mba ref="{$parents[2]/@name/data()}"/>
-        )
-
-      let $concretization :=
-        <mba xmlns="http://www.dke.jku.at/MBA" xmlns:sync="http://www.dke.jku.at/MBA/Synchronization" xmlns:sc="http://www.w3.org/2005/07/scxml" name="{$name}" topLevel="{$topLevel}" hierarchy="parallel" isDefault="true">
-          <levels>
-            {$parentLevel}
-            {$subLevels}
-          </levels>
-          <ancestors>
-            {$ancestorRefs}
-          </ancestors>
-        </mba>
-
-      return $concretization
-
-    ) else (
-      (: 2. $topLevel is NOT second level of $parents ->
-         3. check if there are default descendants on second level of $parents :)
-      let $secondLevelDefaultDescendants :=
-      for $parent in $parents
-        let $secondLevels := mba:getSecondLevel($parent)/@name/data()
-        for $secondLevel in $secondLevels
-          return if (fn:empty(mba:getDescendantsAtLevel($parent, $secondLevel)[@isDefault = true()])) then (
-            (: there are no default descendants for second level -> they need to be created :)
-            (: TODO: recursion call - maybe with copy modify?
-              something like concretize($parent, string-join("default", mba:getSecondLevel($parent)/@name/data(), "Object"), mba:getSecondLevel($parent)/@name/data()) :)
-             mba:concretizeParallel2($parent, concat("default", $secondLevel, "Object"), $secondLevel)
-         ) else (
-          (: there are default descendants - just return them :)
-          (: for $secondLevel in $secondLevels :)
-              mba:getDescendantsAtLevel($parent, $secondLevel)[@isDefault = true()]
-          )
-      return mba:concretizeParallel2($secondLevelDefaultDescendants, $name, $topLevel)
+  (: 2. Check if $topLevel is second level of $parents :)
+  let $parentSecondLevels :=
+    distinct-values(
+            for $parent in $parents
+            return mba:getSecondLevel($parent)/@name/data()
     )
+  let $topLevelIsSecondLevelOfAllParents :=
+    every $parent in $parents
+    satisfies functx:is-value-in-sequence($topLevel, mba:getSecondLevel($parent)/@name/data())
+
+
+  return if ($topLevelIsSecondLevelOfAllParents) then (
+
+    let $numberOfParentLevelsForTopLevel := fn:count(mba:getLevel($parents[1], $topLevel)/mba:parentLevels/mba:level)
+
+    return if ($numberOfParents = $numberOfParentLevelsForTopLevel) then (
+    (: 3. Check if number of parents is correct :)
+
+    (: make concretization :)
+    let $parentLevel := functx:remove-elements(
+            functx:first-node(
+                    mba:getLevel($parents[1], $topLevel)
+            ), 'parentLevels')
+
+    let $levelNames := mba:getNonTopLevels($parents[1])/@name/data()
+    let $subLevelNames := functx:value-except($levelNames, $parentSecondLevels)
+
+    let $subLevels :=
+      for $x in $subLevelNames
+      return mba:getLevel($parents[1], $x) (: what about the levels of the possible other parent? merge?:)
+
+    let $ancestorRefs :=
+      if ($numberOfParents = 1) then (
+        <mba ref="{$parents/@name/data()}"/>
+      ) else (
+        <mba ref="{$parents[1]/@name/data()}"/>,
+        <mba ref="{$parents[2]/@name/data()}"/>
+      )
+
+    let $concretization :=
+      <mba xmlns="http://www.dke.jku.at/MBA" xmlns:sync="http://www.dke.jku.at/MBA/Synchronization" xmlns:sc="http://www.w3.org/2005/07/scxml" name="{$name}" topLevel="{$topLevel}" hierarchy="parallel" isDefault="true">
+        <levels>
+          {$parentLevel}
+          {$subLevels}
+        </levels>
+        <ancestors>
+          {$ancestorRefs}
+        </ancestors>
+      </mba>
+
+    return ($concretization, $objectsCreated)
+    ) else (
+    (: 3. raise error because number of parents is not correct :)
+    error(QName('http://www.dke.jku.at/MBA/err',
+            'ConcretizeParent'),
+            'Missing parent.')
+    )
+
   ) else (
-    (: 1. stop because $topLevel is not a valid level in all $parents :)
+  (: 2. $topLevel is NOT second level of $parents ->
+         generate all second level default descendants that are necessary but do not exist :)
+  let $secondLevelDefaultDescendantsThatAreGenerated :=
+    for $parent in $parents
+    let $secondLevels := mba:getSecondLevel($parent)/@name/data()
+    for $secondLevel in $secondLevels
+    return
+      if (fn:empty(mba:getDescendantsAtLevel($parent, $secondLevel)[@isDefault = true()])) then (
+      (: 2.1.1 there are no default descendants for second level -> they need to be created :)
+      (: TODO: recursion call - maybe with copy modify?
+              something like concretize($parent, string-join("default", mba:getSecondLevel($parent)/@name/data(), "Object"), mba:getSecondLevel($parent)/@name/data()) :)
+      mba:concretizeParallelAccumulator($parent, concat("default", $secondLevel, "Object"), $secondLevel, $objectsCreated)
+      ) else ()
+
+  (: load all default descendants that are necessary and already exist (in db) :)
+  let $secondLevelDefaultDescendantsThatAlreadyExist :=
+    for $parent in $parents
+    let $secondLevels := mba:getSecondLevel($parent)/@name/data()
+    for $secondLevel in $secondLevels
+    return
+      if (not(fn:empty(mba:getDescendantsAtLevel($parent, $secondLevel)[@isDefault = true()]))) then (
+        mba:getDescendantsAtLevel($parent, $secondLevel)[@isDefault = true()]
+      ) else (
+      )
+
+  let $secondLevelDefaultDescendants := ($secondLevelDefaultDescendantsThatAlreadyExist, $secondLevelDefaultDescendantsThatAreGenerated)
+  return mba:concretizeParallelAccumulator($secondLevelDefaultDescendants, $name, $topLevel, ($objectsCreated, $secondLevelDefaultDescendantsThatAreGenerated))
+  )
+  ) else (
+  (: 1. raise eerror because $topLevel is not a valid level in all $parents :)
+  error(QName('http://www.dke.jku.at/MBA/err',
+          'ConcretizeParent'),
+          'Level is not available in all parents')
   )
 };
 
-declare function mba:concretizeParallel($parents as element()*, $name as xs:string, $topLevel as xs:string) as element() {
+declare function mba:concretizeParallelDeleteMe($parents as element()*, $name as xs:string, $topLevel as xs:string) as element() {
 (: check if 1 oder 2 parent elemente angegeben:)
 
 (: fn:count($parents) :)
