@@ -299,6 +299,17 @@ declare function mba:concretizeParallelAccumulator($parents as element()*, $name
   )
 };
 
+declare function mba:checkIfScxmlIdentical($scxml1 as element(), $scxml2 as element()) as xs:boolean {
+  fn:deep-equal($scxml1, $scxml2)
+};
+
+declare function mba:checkIfSCXMLIdenticalForLevel($mba1 as element(), $mba2 as element(), $level as xs:string) as xs:boolean {
+  let $scxml1 := mba:getSCXMLAtLevel($mba1, $level)
+  let $scxml2 := mba:getSCXMLAtLevel($mba2, $level)
+
+  return mba:checkIfScxmlIdentical($scxml1, $scxml2)
+};
+
 declare function mba:concretizeParallelDeleteMe($parents as element()*, $name as xs:string, $topLevel as xs:string) as element() {
 (: check if 1 oder 2 parent elemente angegeben:)
 
