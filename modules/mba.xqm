@@ -446,15 +446,21 @@ declare function mba:getElementsAtLevel($mba       as element(),
 
 declare function mba:getSCXML($mba as element()) as element() {
   let $levelName := mba:getTopLevelName($mba)
+  return mba:getSCXMLAtLevel($mba, $levelName)
+};
+
+
+declare function mba:getSCXMLAtLevel($mba as element(), $levelName as xs:string) as element() {
   let $elements  := mba:getElementsAtLevel($mba, $levelName)
-  
+
   let $scxml :=
-    if($elements/@activeVariant) then 
+    if($elements/@activeVariant) then
       $elements/sc:scxml[@name = $elements/@activeVariant]
     else $elements/sc:scxml[1]
-  
+
   return $scxml
 };
+
 
 declare updating function mba:addSCXML($mba       as element(),
                                        $levelName as xs:string,
