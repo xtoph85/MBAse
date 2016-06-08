@@ -225,17 +225,62 @@ declare function mba:concretizeParallelAccumulator($parents as element()*, $name
     (: 3. Check if number of parents is correct :)
 
     (: make concretization :)
-    let $parentLevel := functx:remove-elements(
+
+
+    let $parentLevel :=
+      if ($numberOfParents = 1 or mba:checkIfSCXMLIdenticalForLevel($parents[1], $parents[2], $topLevel)) then (
+        functx:remove-elements(
+                functx:first-node(
+                        mba:getLevel($parents[1], $topLevel)
+                ), 'parentLevels')
+      ) else (
+          error(QName('http://www.dke.jku.at/MBA/err',
+                  'ConcretizeParent'),
+                  'SCXML cannot be merged automatically')
+
+      )
+
+    (: RESTORE ME IN CASE OF FAILURE
+    let $parentLevel :=
+      if ($numberOfParents = 1 ) then (
+        functx:remove-elements(
             functx:first-node(
                     mba:getLevel($parents[1], $topLevel)
             ), 'parentLevels')
+      ) else (
+          if (mba:checkIfSCXMLIdenticalForLevel($parents[1], $parents[2], $topLevel)) then (
+          functx:remove-elements(
+                  functx:first-node(
+                          mba:getLevel($parents[1], $topLevel)
+                  ), 'parentLevels')
+        ) else (
+          error(QName('http://www.dke.jku.at/MBA/err',
+                  'ConcretizeParent'),
+                  'SCXML cannot be merged automatically')
+        )
+      ) :)
 
     let $levelNames := mba:getNonTopLevels($parents[1])/@name/data()
     let $subLevelNames := functx:value-except($levelNames, $parentSecondLevels)
 
+    (: let $subLevels :=
+      for $x in $subLevelNames
+      return mba:getLevel($parents[1], $x)  what about the levels of the possible other parent? merge?:)
+
+    (: return subLevels and check if they are identical in case of 2 parents :)
     let $subLevels :=
       for $x in $subLevelNames
-      return mba:getLevel($parents[1], $x) (: what about the levels of the possible other parent? merge?:)
+      return if ($numberOfParents = 1) then (
+        mba:getLevel($parents[1], $x)
+      ) else (
+        if (mba:checkIfSCXMLIdenticalForLevel($parents[1], $parents[2], $x)) then (
+          mba:getLevel($parents[1], $x)
+        ) else (
+          error(QName('http://www.dke.jku.at/MBA/err',
+                  'ConcretizeParent'),
+                  'SCXML cannot be merged automatically')
+        )
+      )
 
     let $ancestorRefs :=
       if ($numberOfParents = 1) then (
