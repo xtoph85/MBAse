@@ -16,10 +16,10 @@ let $mbaNew := $mbaDocument/mba:mba
 return mba:insert($db, $collectionName, (), $mbaNew) :)
 
 
-(: Concretize HoltonHotelChain on level rental - check if generating missing default MBAse works - multiple MBA objects are returned 
+(: Concretize HoltonHotelChain on level rental - check if generating missing default MBAse works - multiple MBA objects are returned
 let $mbaHolton := mba:getMBA($db, $collectionName, "HoltonHotelChain")
 let $mbaAustrianPresidentSuite := mba:concretizeParallel($mbaHolton, 'AustrianPresidentSuite', 'rental')
-return $mbaAustrianPresidentSuite  :)
+return $mbaAustrianPresidentSuite   :)
 
 (: Concretize Holton Hotel Chain MBA - parallel level accomodationType  
 let $mbaHolton := mba:getMBA($db, $collectionName, "HoltonHotelChain")
@@ -27,22 +27,22 @@ let $mbaPresidentSuite := mba:concretizeParallel($mbaHolton, 'PresidentSuite', '
 return mba:insert($db, $collectionName, (), $mbaPresidentSuite) :)
 
 
-(: Concretize Holton Hotel Chain MBA - parallel level country  
+(: Concretize Holton Hotel Chain MBA - parallel level country 
 let $mbaHolton := mba:getMBA($db, $collectionName, "HoltonHotelChain")
 let $mbaAustria := mba:concretizeParallel($mbaHolton, 'Austria', 'country')
-return mba:insert($db, $collectionName, (), $mbaAustria)  :) 
+return mba:insert($db, $collectionName, (), $mbaAustria)   :) 
 
-(: Concretize HoltonHotelChain on level rental - check if using already existng default-descendants works  :)
+(: Concretize HoltonHotelChain on level rental - check if using already existng default-descendants works  
 let $mbaHolton := mba:getMBA($db, $collectionName, "HoltonHotelChain")
 let $mbaAustria := mba:getMBA($db, $collectionName, "Austria")
 let $mbaPresidentSuite := mba:getMBA($db, $collectionName, "PresidentSuite") 
 
 let $mbaAustrianPresidentSuite := mba:concretizeParallel($mbaHolton, 'AustrianPresidentSuite', 'rental')
-return $mbaAustrianPresidentSuite  
+return $mbaAustrianPresidentSuite  :)
 
 (: Concretize Austria & PresidentSuite MBA in order to create a rental MBA for a PresidentSuite in Austria
-If concretize is called with only parent MBA this still works because I don't know how to detect the error 
-Using grandparent MBA does not work because new levels can be introduced by MBA's so its no use to check grandparents  
+[If concretize is called with only parent MBA this still works because I don't know how to detect the error 
+Using grandparent MBA does not work because new levels can be introduced by MBA's so its no use to check grandparents] -> solved this problem  
 let $mbaHolton := mba:getMBA($db, $collectionName, "HoltonHotelChain")
 let $mbaAustria := mba:getMBA($db, $collectionName, "Austria")
 let $mbaPresidentSuite := mba:getMBA($db, $collectionName, "PresidentSuite") 
@@ -50,19 +50,19 @@ let $mbaPresidentSuite := mba:getMBA($db, $collectionName, "PresidentSuite")
 let $mbaAustrianPresidentSuite := mba:concretizeParallel(($mbaAustria, $mbaPresidentSuite), 'AustrianPresidentSuite', 'rental') 
 return $mbaAustrianPresidentSuite :)
 
-(: Try to create a rental MBA by concretizing only one of the 2 required parents - fails because one parent is missing
+(: Try to create a rental MBA by concretizing only one of the 2 required parents - fails because one parent is missing 
 let $mbaAustria := mba:getMBA($db, $collectionName, "Austria")
 let $mbaAustrianPresidentSuite := mba:concretizeParallel($mbaAustria, 'AustrianPresidentSuite', 'rental') 
 
 return $mbaAustrianPresidentSuite  :)
 
-(: Concretize HoltonHotelChain MBA & Austria MBA - produces error because HoltonHotelChain mba is at wrong level   
+(: Concretize HoltonHotelChain MBA & Austria MBA - produces error because HoltonHotelChain mba is at wrong level 
 let $mbaHolton := mba:getMBA($db, $collectionName, "HoltonHotelChain")
 let $mbaAustria := mba:getMBA($db, $collectionName, "Austria")
 let $mbaPresidentSuite := mba:getMBA($db, $collectionName, "PresidentSuite") 
 
 let $mbaAustrianPresidentSuite := mba:concretizeParallel(($mbaHolton, $mbaAustria), 'AustrianPresidentSuite', 'rental') 
-return $mbaAustrianPresidentSuite  :)
+return $mbaAustrianPresidentSuite   :)
 
 (: Insert another mba with toplevel country - SCXML of mbaGermany is slighty modified (additional data attribute on level rental)   
 
@@ -128,10 +128,10 @@ let $mbaGermany := <mba xmlns:sc="http://www.w3.org/2005/07/scxml" xmlns:sync="h
 
 return mba:insert($db, $collectionName, (), $mbaGermany) :) 
 
-(: Concretize GermanPresidentSuite - should fail because SCXML of germany MBA has been modified
+(: Concretize GermanPresidentSuite - should fail because SCXML of germany MBA has been modified  :)
 let $mbaHolton := mba:getMBA($db, $collectionName, "HoltonHotelChain")
 let $mbaGermany := mba:getMBA($db, $collectionName, "Germany")
 let $mbaPresidentSuite := mba:getMBA($db, $collectionName, "PresidentSuite") 
 
 let $mbaGermanPresidentSuite := mba:concretizeParallel(($mbaPresidentSuite, $mbaGermany), 'GermanPresidentSuite', 'rental') 
-return $mbaGermanPresidentSuite  :)
+return $mbaGermanPresidentSuite
