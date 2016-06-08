@@ -32,13 +32,13 @@ let $mbaHolton := mba:getMBA($db, $collectionName, "HoltonHotelChain")
 let $mbaAustria := mba:concretizeParallel($mbaHolton, 'Austria', 'country')
 return mba:insert($db, $collectionName, (), $mbaAustria)  :) 
 
-(: Concretize HoltonHotelChain on level rental - check if using already existng default-descendants works 
+(: Concretize HoltonHotelChain on level rental - check if using already existng default-descendants works  :)
 let $mbaHolton := mba:getMBA($db, $collectionName, "HoltonHotelChain")
 let $mbaAustria := mba:getMBA($db, $collectionName, "Austria")
 let $mbaPresidentSuite := mba:getMBA($db, $collectionName, "PresidentSuite") 
 
 let $mbaAustrianPresidentSuite := mba:concretizeParallel($mbaHolton, 'AustrianPresidentSuite', 'rental')
-return $mbaAustrianPresidentSuite   :)
+return $mbaAustrianPresidentSuite  
 
 (: Concretize Austria & PresidentSuite MBA in order to create a rental MBA for a PresidentSuite in Austria
 If concretize is called with only parent MBA this still works because I don't know how to detect the error 
@@ -64,3 +64,74 @@ let $mbaPresidentSuite := mba:getMBA($db, $collectionName, "PresidentSuite")
 let $mbaAustrianPresidentSuite := mba:concretizeParallel(($mbaHolton, $mbaAustria), 'AustrianPresidentSuite', 'rental') 
 return $mbaAustrianPresidentSuite  :)
 
+(: Insert another mba with toplevel country - SCXML of mbaGermany is slighty modified (additional data attribute on level rental)   
+
+let $mbaGermany := <mba xmlns:sc="http://www.w3.org/2005/07/scxml" xmlns:sync="http://www.dke.jku.at/MBA/Synchronization" xmlns="http://www.dke.jku.at/MBA" name="Germany" topLevel="country" hierarchy="parallel" isDefault="true">
+  <levels>
+    <level name="country">
+      <elements>
+        <sc:scxml name="Country">
+          <sc:datamodel>
+            <sc:data id="name"/>
+            <sc:data id="vat"/>
+            <sc:data id="highSeasonPremium "/>
+          </sc:datamodel>
+          <sc:initial>
+            <sc:transition target="OffSeason"/>
+          </sc:initial>
+          <sc:state id="OffSeason">
+            <sc:transition event="startHighSeason" target="HighSeason"/>
+          </sc:state>
+          <sc:state id="HighSeason">
+            <sc:transition event="endHighSeason" target="OffSeason"/>
+          </sc:state>
+        </sc:scxml>
+      </elements>
+    </level>
+    <level name="rental">
+      <elements>
+        <sc:scxml name="Rental">
+          <sc:datamodel>
+            <sc:data id="renter"/>
+            <sc:data id="duration"/>
+            <sc:data id="assignedRoom"/>
+            <sc:data id="smoker"/>
+          </sc:datamodel>
+          <sc:initial>
+            <sc:transition target="Opening"/>
+          </sc:initial>
+          <sc:state id="Opening">
+            <sc:transition event="setDuration">
+              <sc:assign location="$duration" expr="$_event/data/text()"/>
+            </sc:transition>
+            <sc:transition event="pickupKeys" target="Open"/>
+          </sc:state>
+          <sc:state id="Open">
+            <sc:transition event="returnKeys" target="Settling"/>
+          </sc:state>
+          <sc:state id="Settling">
+            <sc:transition event="close" target="Closed"/>
+          </sc:state>
+          <sc:state id="Closed"/>
+        </sc:scxml>
+      </elements>
+      <parentLevels>
+        <level ref="country"/>
+        <level ref="accomodationType"/>
+      </parentLevels>
+    </level>
+  </levels>
+  <ancestors>
+    <mba xmlns="" ref="HoltonHotelChain"/>
+  </ancestors>
+</mba>
+
+return mba:insert($db, $collectionName, (), $mbaGermany) :) 
+
+(: Concretize GermanPresidentSuite - should fail because SCXML of germany MBA has been modified
+let $mbaHolton := mba:getMBA($db, $collectionName, "HoltonHotelChain")
+let $mbaGermany := mba:getMBA($db, $collectionName, "Germany")
+let $mbaPresidentSuite := mba:getMBA($db, $collectionName, "PresidentSuite") 
+
+let $mbaGermanPresidentSuite := mba:concretizeParallel(($mbaPresidentSuite, $mbaGermany), 'GermanPresidentSuite', 'rental') 
+return $mbaGermanPresidentSuite  :)
