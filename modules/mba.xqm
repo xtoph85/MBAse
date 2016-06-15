@@ -743,12 +743,13 @@ declare updating function mba:removeFromUpdateLog($mba as element()) {
 };
 (: Gegenstück zur markAsNew-Funktion - wird vom MultiLevelProcessEnvironment aufgerufen :)
 declare updating function mba:removeFromInsertLog($mba as element()) {
-    let $dbName := mba:getDatabaseName($mba)
+    (: let $dbName := mba:getDatabaseName($mba)
     let $collectionName := mba:getCollectionName($mba)
 
     let $document := db:open($dbName, 'collections.xml')    
     let $collectionEntry :=
-        $document/mba:collections/mba:collection[@name = $collectionName]
+        $document/mba:collections/mba:collection[@name = $collectionName] :)
+    let $collectionEntry := mba:getCollectionEntry($mba)
 
     return
         delete node functx:first-node(
