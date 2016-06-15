@@ -190,8 +190,21 @@ declare updating function mba:createCollection($db as xs:string,
 };
 
 
-(: TODO: rausfinden ob es ein concretiez für simple & paralell hierarachies geben soll oder getrennte Funktionen :)
 declare function mba:concretize($parents as element()*,
+        $name as xs:string,
+        $topLevel as xs:string) as element() {
+
+    let $concretization :=
+        if ($parents[1]/@hierarchy = 'simple') then
+            mba:concretizeSimple($parents, $name, $topLevel)
+        else (
+            mba:concretizeParallel($parents, $name, $topLevel)
+        )
+    return $concretization
+
+};
+
+declare function mba:concretizeSimple($parents as element()*,
         $name as xs:string,
         $topLevel as xs:string) as element() {
     let $parent := $parents[1]

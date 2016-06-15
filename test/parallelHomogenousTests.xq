@@ -133,5 +133,5 @@ let $mbaHolton := mba:getMBA($db, $collectionName, "HoltonHotelChain")
 let $mbaGermany := mba:getMBA($db, $collectionName, "Germany")
 let $mbaPresidentSuite := mba:getMBA($db, $collectionName, "PresidentSuite") 
 
-let $mbaGermanPresidentSuite := mba:concretizeParallel(($mbaPresidentSuite, $mbaGermany), 'GermanPresidentSuite', 'rental') 
+let $mbaGermanPresidentSuite := mba:concretize(($mbaPresidentSuite, $mbaGermany), 'GermanPresidentSuite', 'rental') 
 return $mbaGermanPresidentSuite
