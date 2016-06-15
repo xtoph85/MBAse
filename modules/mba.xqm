@@ -105,12 +105,40 @@ declare updating function mba:createMBAse($newDb as xs:string) {
 
     let $mbaSchemaFileNameSimple := 'xsd/mba_simple.xsd'
 
-    (: TODO: mbaSchemaParallel anlegen und in xsd serialisieren :)
+    let $mbaSchemaParallel :=
+        <xs:schema xmlns="http://www.dke.jku.at/MBA"
+        xmlns:mba="http://www.dke.jku.at/MBA"
+        xmlns:sc="http://www.w3.org/2005/07/scxml"
+        xmlns:xs="http://www.w3.org/2001/XMLSchema"
+        targetNamespace="http://www.dke.jku.at/MBA"
+        elementFormDefault="qualified"
+        attributeFormDefault="unqualified">
+            <xs:element name="mba">
+                <xs:complexType>
+                    <xs:attribute name="name"      type="xs:string"     use="required"/>
+                    <xs:attribute name="hierarchy" type="hierarchyType" use="required" default="parallel"/>
+                    <xs:attribute name="topLevel" type="xs:string" use="required" />
+                    <xs:sequence>
+                        <xs:element name="level" minOccurs="1" maxOccurs="*">
+                            <xs:complexType>
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+            <xs:simpleType name="hierarchyType">
+                <xs:restriction base="xs:string">
+                    <xs:enumeration value="parallel"/>
+                </xs:restriction>
+            </xs:simpleType>
+        </xs:schema>
+
+    let $mbaSchemaFileParallel := 'xsd/mba_parallel.xsd'
 
     return db:create(
             $newDb,
-            ($dbDimSchema, $mbaSchemaSimple, $dbDimContent),
-            ($dbDimSchemaFileName, $mbaSchemaFileNameSimple, $dbDimFileName)
+            ($dbDimSchema, $mbaSchemaSimple, $mbaSchemaParallel, $dbDimContent),
+            ($dbDimSchemaFileName, $mbaSchemaFileNameSimple, $mbaSchemaFileParallel, $dbDimFileName)
     )
 };
 
@@ -442,7 +470,8 @@ declare updating function mba:removeSCXML($mba as element(),
 };
 
 
-(: TODO: Support parallel Hierarchies oder remove?? Schütz fragen :)
+(: TODO: Support parallel Hierarchies oder remove?? Schütz fragen
+  offensichtlich keinerlei Konsistenz-Check vorhanden :)
 declare updating function mba:insertLevel($mba as element(),
         $levelName as xs:string,
         $parentLevelName as xs:string,
