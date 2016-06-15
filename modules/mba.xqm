@@ -484,7 +484,8 @@ declare updating function mba:removeSCXML($mba as element(),
 
 
 (: TODO: Support parallel Hierarchies oder remove?? Schütz fragen
-  offensichtlich keinerlei Konsistenz-Check vorhanden :)
+  offensichtlich keinerlei Konsistenz-Check vorhanden
+   vorlage für reflektive funktion :)
 declare updating function mba:insertLevel($mba as element(),
         $levelName as xs:string,
         $parentLevelName as xs:string,
@@ -745,10 +746,9 @@ declare updating function mba:removeFromInsertLog($mba as element()) {
     let $dbName := mba:getDatabaseName($mba)
     let $collectionName := mba:getCollectionName($mba)
 
-    let $document := db:open($dbName, 'collections.xml')
-    (: TODO: Fragen ob das Absicht ist dass hier @ref referenziert wird während bei den anderen Funtkionen @name verwendet wird :)
+    let $document := db:open($dbName, 'collections.xml')    
     let $collectionEntry :=
-        $document/mba:collections/mba:collection[@ref = $collectionName]
+        $document/mba:collections/mba:collection[@name = $collectionName]
 
     return
         delete node functx:first-node(
