@@ -810,6 +810,3 @@ declare updating function mba:insert($db as xs:string, $collection as xs:string,
 declare updating function mba:insertDescendant($mba as element(), $descendant as element()) {
     ()
 };
-
-
-(: TODO: insert and getDescendants und :)
