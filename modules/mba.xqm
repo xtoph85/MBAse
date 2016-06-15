@@ -69,7 +69,7 @@ declare updating function mba:createMBAse($newDb as xs:string) {
                 </xs:restriction>
             </xs:simpleType>
         </xs:schema>
-    (: TODO: Fragen ob das anpassen des enum value "parallel" statt "complex" in Ordnung ist :)
+    
     let $dbDimContent :=
         <collections
         xmlns="http://www.dke.jku.at/MBA"
