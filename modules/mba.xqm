@@ -225,7 +225,7 @@ declare function mba:concretizeSimple($parents as element()*,
     let $collectionName := mba:getCollectionName($parent)
 
     let $concretization := copy $c := $concretization modify (
-        mba:addBoilerPlateElementsNonUpdating($c, $dbName, $collectionName)
+        mba:addBoilerplateElementsNonUpdating($c, $dbName, $collectionName)
     ) return $c
 
     return $concretization
@@ -828,7 +828,7 @@ declare updating function mba:addBoilerplateElements($mba as element(), $databas
     )
 };
 
-declare function mba:addBoilerPlateElementsNonUpdating($mba as element(), $databaseName as xs:string, $collectionName as xs:string) as element()* {
+declare function mba:addBoilerplateElementsNonUpdating($mba as element(), $databaseName as xs:string, $collectionName as xs:string) as element()* {
     let $mbaWithEvent :=
         if (not(mba:getSCXML($mba)/sc:datamodel/sc:data[@id = '_event'])) then
             let $mba := copy $c := $mba modify (
