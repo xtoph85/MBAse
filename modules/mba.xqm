@@ -69,7 +69,7 @@ declare updating function mba:createMBAse($newDb as xs:string) {
                 </xs:restriction>
             </xs:simpleType>
         </xs:schema>
-    
+
     let $dbDimContent :=
         <collections
         xmlns="http://www.dke.jku.at/MBA"
@@ -225,7 +225,7 @@ declare function mba:concretizeSimple($parents as element()*,
     let $collectionName := mba:getCollectionName($parent)
 
     let $concretization := copy $c := $concretization modify (
-        mba:addBoilerplateElements($c, $dbName, $collectionName)
+        mba:addBoilerPlateElementsNonUpdating($c, $dbName, $collectionName)
     ) return $c
 
     return $concretization
@@ -743,7 +743,7 @@ declare updating function mba:removeFromUpdateLog($mba as element()) {
 };
 (: Gegenstück zur markAsNew-Funktion - wird vom MultiLevelProcessEnvironment aufgerufen :)
 declare updating function mba:removeFromInsertLog($mba as element()) {
-    (: let $dbName := mba:getDatabaseName($mba)
+(: let $dbName := mba:getDatabaseName($mba)
     let $collectionName := mba:getCollectionName($mba)
 
     let $document := db:open($dbName, 'collections.xml')    
@@ -792,8 +792,7 @@ declare updating function mba:removeCurrentEvent($mba as element()) {
 
 
 (: Liefert ein neues MBA zurück ohne es einzufügen, dass soll später mit insert passieren. :)
-(: TODO: Support für parallel Hierarchien :)
-(: TODO: kann man das auch als nicht update function machen (copy modify etc) :)
+(:TODO Check with Schuetz if non updating function works as expected :)
 declare updating function mba:addBoilerplateElements($mba as element(), $databaseName as xs:string, $collectionName as xs:string) {
     let $scxml := mba:getSCXML($mba)
 
@@ -829,12 +828,77 @@ declare updating function mba:addBoilerplateElements($mba as element(), $databas
     )
 };
 
+declare function mba:addBoilerPlateElementsNonUpdating($mba as element(), $databaseName as xs:string, $collectionName as xs:string) as element()* {
+    let $mbaWithEvent :=
+        if (not(mba:getSCXML($mba)/sc:datamodel/sc:data[@id = '_event'])) then
+            let $mba := copy $c := $mba modify (
+                insert node <sc:data id="_event"/> into mba:getSCXML($c)/sc:datamodel
+            ) return $c
+            return $mba
+        else ($mba)
+
+    let $mbaWithDBInfo :=
+        if (not(mba:getSCXML($mba)/sc:datamodel/sc:data[@id = '_x'])) then
+            let $mba := copy $c := $mbaWithEvent modify (
+                insert node
+                <sc:data id="_x">
+                    <db xmlns="">{$databaseName}</db>
+                    <collection xmlns="">{$collectionName}</collection>
+                    <name xmlns="">{fn:string($mba/@name)}</name>
+                    <currentStatus xmlns=""/>
+                    <externalEventQueue xmlns=""/>
+                </sc:data>
+                into mba:getSCXML($c)/sc:datamodel) return $c
+            return $mba
+        else ($mbaWithEvent)
+
+    let $mbaWithParallelNodes :=
+        if ($mba/@hierarchy = 'parallel') then (
+            let $mbaWithAbstractions :=
+                if (not($mba/mba:abstractions)) then
+                    let $mba := copy $c := $mbaWithDBInfo modify (
+                        insert node <mba:abstractions/> into $c
+                    ) return $c
+                    return $mba
+                else ($mbaWithDBInfo)
+
+            let $mbaWithConcretizations :=
+                if (not($mba/mba:conretizations)) then
+                    let $mba := copy $c := $mbaWithAbstractions modify (
+                        insert node <mba:concretizations/> into $c
+                    ) return $c
+                    return $mba
+                else ($mbaWithAbstractions)
+
+            let $mbaWithAncestors :=
+                if (not($mba/mba:ancestors)) then
+                    let $mba := copy $c := $mbaWithConcretizations modify (
+                        insert node <mba:ancestors/> into $c
+                    ) return $c
+                    return $mba
+                else ($mbaWithConcretizations)
+
+            let $mbaWithDescendants :=
+                if (not($mba/mba:descendants)) then
+                    let $mba := copy $c := $mbaWithAncestors modify (
+                        insert node <mba:descendants/> into $c
+                    ) return $c
+                    return $mba
+                else ($mbaWithAncestors)
+
+            return $mbaWithDescendants
+
+        ) else ($mbaWithDBInfo)
+    return $mbaWithParallelNodes
+};
+
+
 
 (: Die insert-Funktion verarbeitet nur konsistente MBAs von parallelen Hierarchien (die also auch schon Boilerplate-Elements enthalten :)
 declare updating function mba:insert($db as xs:string, $collection as xs:string, $parents as element()*, $mba as element()) {
     let $collectionDocument := mba:getCollection($db, $collection)
     let $mbaWithBoilerPlateElements := copy $c := $mba modify (
-        mba:addBoilerplateElements($c, $db, $collection)
+        mba:addBoilerplateElementsNonUpdating($c, $db, $collection)
     ) return $c
 
     return (
