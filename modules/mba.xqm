@@ -338,7 +338,6 @@ declare function mba:getLevel($mba as element(), $level as xs:string) as element
 declare function mba:getSecondLevel($mba as element()) as element()* {
     let $level :=
         if ($mba/@hierarchy = 'simple') then
-        (: TODO: test if this works for simply hierarchies :)
             $mba/mba:topLevel/mba:childLevel
         else (
             $mba/mba:levels//mba:level[./mba:parentLevels/mba:level/@ref = $mba/@topLevel/data()]
@@ -349,7 +348,6 @@ declare function mba:getSecondLevel($mba as element()) as element()* {
 declare function mba:getNonTopLevels($mba as element()) as element()* {
     let $level :=
         if ($mba/@hierarchy = 'simple') then
-        (: TODO: test if this works for simply hierarchies :)
             $mba/mba:topLevel/mba:childLevel
         else (
             $mba/mba:levels//mba:level[@name != $mba/@topLevel/data()]
