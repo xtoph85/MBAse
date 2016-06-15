@@ -313,7 +313,7 @@ declare function mba:concretizeParallelAccumulator($parents as element()*, $name
     )
 };
 
-declare function mba:checkIfScxmlIdentical($scxml1 as element(), $scxml2 as element()) as xs:boolean {
+declare function mba:checkIfSCXMLIdentical($scxml1 as element(), $scxml2 as element()) as xs:boolean {
     fn:deep-equal($scxml1, $scxml2)
 };
 
@@ -321,7 +321,7 @@ declare function mba:checkIfSCXMLIdenticalForLevel($mba1 as element(), $mba2 as 
     let $scxml1 := mba:getSCXMLAtLevel($mba1, $level)
     let $scxml2 := mba:getSCXMLAtLevel($mba2, $level)
 
-    return mba:checkIfScxmlIdentical($scxml1, $scxml2)
+    return mba:checkIfSCXMLIdentical($scxml1, $scxml2)
 };
 
 declare function mba:getLevel($mba as element(), $level as xs:string) as element()* {
