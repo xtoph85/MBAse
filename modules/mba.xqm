@@ -210,9 +210,6 @@ declare function mba:concretizeSimple($parents as element()*,
     let $parent := $parents[1]
 
     let $level := $parent/mba:topLevel//mba:childLevel[@name = $topLevel]
-    (: Unterscheidung ob simple oder parallel hierarchy anhand des parent mba
-   parents dürfen nicht miteinander in einer konkretisierungsbeziehung stehen (komplizierter als gedacht)
-    und müssen in derselben collection sein :)
 
     let $concretization :=
         <mba:mba name="{$name}" hierarchy="simple">
@@ -354,7 +351,7 @@ declare function mba:concretizeParallelAccumulator($parents as element()*, $name
     (: 1. raise eerror because $topLevel is not a valid level in all $parents :)
     error(QName('http://www.dke.jku.at/MBA/err',
             'ConcretizeParent'),
-            'Level is not available in all parents')
+            concat('Level ', $topLevel, ' is not available in all parents'))
     )
 };
 
