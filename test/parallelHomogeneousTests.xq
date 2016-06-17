@@ -32,7 +32,7 @@ let $mbaHolton := mba:getMBA($db, $collectionName, "HoltonHotelChain")
 let $mbaAustria := mba:concretizeParallel($mbaHolton, 'Austria', 'country')
 return mba:insert($db, $collectionName, (), $mbaAustria)   :) 
 
-(: Concretize HoltonHotelChain on level rental - check if using already existng default-descendants works  
+(: Concretize HoltonHotelChain on level rental - check if using already existing default-descendants works  
 let $mbaHolton := mba:getMBA($db, $collectionName, "HoltonHotelChain")
 let $mbaAustria := mba:getMBA($db, $collectionName, "Austria")
 let $mbaPresidentSuite := mba:getMBA($db, $collectionName, "PresidentSuite") 
@@ -50,16 +50,19 @@ let $mbaPresidentSuite := mba:getMBA($db, $collectionName, "PresidentSuite")
 let $mbaAustrianPresidentSuite := mba:concretizeParallel(($mbaAustria, $mbaPresidentSuite), 'AustrianPresidentSuite', 'rental') 
 return $mbaAustrianPresidentSuite :)
 
-(: Try to create a rental MBA by concretizing only one of the 2 required parents - fails because one parent is missing 
+(: Try to create a rental MBA by concretizing only one of the 2 required parents - fails because one parent is missing :)
 let $mbaAustria := mba:getMBA($db, $collectionName, "Austria")
 let $mbaAustrianPresidentSuite := mba:concretizeParallel($mbaAustria, 'AustrianPresidentSuite', 'rental') 
 
-return $mbaAustrianPresidentSuite  :)
+return $mbaAustrianPresidentSuite  
 
-(: Concretize HoltonHotelChain MBA & Austria MBA - produces error because HoltonHotelChain mba is at wrong level  :)
+(: Concretize HoltonHotelChain MBA & Austria MBA - produces error because HoltonHotelChain mba is at wrong level  
 let $mbaHolton := mba:getMBA($db, $collectionName, "HoltonHotelChain")
 let $mbaAustria := mba:getMBA($db, $collectionName, "Austria")
 let $mbaPresidentSuite := mba:getMBA($db, $collectionName, "PresidentSuite") 
-
 let $mbaAustrianPresidentSuite := mba:concretizeParallel(($mbaHolton, $mbaAustria), 'AustrianPresidentSuite', 'rental') 
-return $mbaAustrianPresidentSuite  
+return $mbaAustrianPresidentSuite  :)
+
+
+
+
