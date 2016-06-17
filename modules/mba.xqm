@@ -261,9 +261,11 @@ declare function mba:concretizeParallelAccumulator($parents as element()*, $name
 
     return if ($topLevelIsSecondLevelOfAllParents) then (
 
-        let $numberOfParentLevelsForTopLevel := fn:count(mba:getLevel($parents[1], $topLevel)/mba:parentLevels/mba:level)
+        let $numberOfParentLevelsForTopLevelIsCorrect :=
+            every $parent in $parents
+            satisfies $numberOfParents =  fn:count(mba:getLevel($parent, $topLevel)/mba:parentLevels/mba:level)
 
-        return if ($numberOfParents = $numberOfParentLevelsForTopLevel) then (
+        return if ($numberOfParentLevelsForTopLevelIsCorrect) then (
         (: 3. Check if number of parents is correct :)
 
         (: make concretization :)
