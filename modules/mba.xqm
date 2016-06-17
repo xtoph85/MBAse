@@ -276,7 +276,7 @@ declare function mba:concretizeParallelAccumulator($parents as element()*, $name
             ) else (
                 error(QName('http://www.dke.jku.at/MBA/err',
                         'ConcretizeParent'),
-                        'SCXML cannot be merged automatically')
+                        'SCXML of TopLevel cannot be merged automatically')
 
             )
 
@@ -291,7 +291,7 @@ declare function mba:concretizeParallelAccumulator($parents as element()*, $name
             ) else (
                 error(QName('http://www.dke.jku.at/MBA/err',
                         'ConcretizeParent'),
-                        'SCXML cannot be merged automatically')
+                        concat('SCXML of level ', $x, ' cannot be merged automatically'))
             )
 
         let $ancestorRefs :=
