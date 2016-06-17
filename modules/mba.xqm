@@ -224,9 +224,11 @@ declare function mba:concretizeSimple($parents as element()*,
     let $dbName := mba:getDatabaseName($parent)
     let $collectionName := mba:getCollectionName($parent)
 
-    let $concretization := copy $c := $concretization modify (
+    (: let $concretization := copy $c := $concretization modify (
         mba:addBoilerplateElementsNonUpdating($c, $dbName, $collectionName)
-    ) return $c
+    ) return $c :)
+
+    let $concretization := mba:addBoilerplateElementsNonUpdating($concretization, $dbName, $collectionName)
 
     return $concretization
 };
@@ -897,10 +899,11 @@ declare function mba:addBoilerplateElementsNonUpdating($mba as element(), $datab
 (: Die insert-Funktion verarbeitet nur konsistente MBAs von parallelen Hierarchien (die also auch schon Boilerplate-Elements enthalten :)
 declare updating function mba:insert($db as xs:string, $collection as xs:string, $parents as element()*, $mba as element()) {
     let $collectionDocument := mba:getCollection($db, $collection)
-    let $mbaWithBoilerPlateElements := copy $c := $mba modify (
-        mba:addBoilerplateElementsNonUpdating($c, $db, $collection)
-    ) return $c
+    (: let $mbaWithBoilerPlateElements := copy $c := $mba modify (
+        mba:addBoilerplateElements($c, $db, $collection)
+    ) return $c :)
 
+    let $mbaWithBoilerPlateElements :=  mba:addBoilerplateElementsNonUpdating($mba, $db, $collection)
     return (
         insert node $mbaWithBoilerPlateElements into $collectionDocument,
 
