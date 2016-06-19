@@ -328,7 +328,7 @@ declare function mba:concretizeParallelAccumulator($parents as element()*, $name
         let $secondLevels := mba:getSecondLevel($parent)/@name/data()
         for $secondLevel in $secondLevels
         return
-            if (fn:empty(mba:getDescendantsAtLevel($parent, $secondLevel)[@isDefault = true()])) then (
+            if (not($topLevel  = $secondLevel) and fn:empty(mba:getDescendantsAtLevel($parent, $secondLevel)[@isDefault = true()])) then (
             (: 2.1.1 there are no default descendants for second level -> they need to be created :)
             mba:concretizeParallelAccumulator($parent, concat("default", $secondLevel, "Object"), $secondLevel, $objectsCreated)
             ) else ()
