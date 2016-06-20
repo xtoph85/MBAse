@@ -6,19 +6,19 @@ declare variable $db := 'myMBAse';
 declare variable $collectionName := 'parallelHeteroHomogenous';
 
 
-(: Create a dedicated collection for heterohomogenous MBA's     
-mba:createCollection($db, $collectionName) :)  
+(: Create a dedicated collection for heterohomogenous MBA's
+mba:createCollection($db, $collectionName) :)
 
-(: Read Holton Hotel Chain MBA and insert it into db 
+(: Read Holton Hotel Chain MBA and insert it into db
 let $mbaDocument := fn:doc('D:/workspaces/master/MBAse/example/heteroHomogeneous/HoltonHotelChain-MBA-NoBoilerPlateElements.xml')
 let $mbaNew := $mbaDocument/mba:mba
 return mba:insert($db, $collectionName, (), $mbaNew) :)
 
 
-(: Concretize Holton Hotel Chain MBA - parallel level accomodationType 
+(: Concretize Holton Hotel Chain MBA - parallel level accomodationType
 let $mbaHolton := mba:getMBA($db, $collectionName, "HoltonHotelChain")
 let $mbaPresidentSuite := mba:concretizeParallel($mbaHolton, 'PresidentSuite', 'accomodationType')
-return mba:insert($db, $collectionName, (), $mbaPresidentSuite) :)
+return mba:insert($db, $collectionName, (), $mbaPresidentSuite)  :)
 
 
 (: Concretize Holton Hotel Chain MBA - parallel level country 

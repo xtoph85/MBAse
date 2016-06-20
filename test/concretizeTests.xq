@@ -94,6 +94,26 @@ return $mbaSAES   :)
 (: return local:concretizeParallelTest($mbaJKU, 'CoreCompetenceDKE', 'module')  :)
 
 
-(: Case 3 - concretize fourth level of one MBA :)
-return local:concretizeParallelTest($mbaJKU, 'Datenmodellierung', 'course') 
+(: Case 3 - concretize fourth level of one MBA 
+return local:concretizeParallelTest($mbaJKU, 'Datenmodellierung', 'course')  :)
+
+(: Case 4 - concretize giving 2 parents if only one is required :)
+let $mbaTU := mba:getMBA($db, $collectionName, "TechnicalUniversityVienna")
+let $mbaPhysics := mba:getMBA($db, $collectionName, "Physics")
+let $parents := ($mbaTU, $mbaPhysics)
+let $objectsCreated := ()
+let $topLevel := 'program'
+
+
+return mba:concretize($parents, 'UselessStudies', $topLevel)
+
+(: This block could be useful - or not :)
+(: let $parentsAreRelatedToEachOther := 
+            some $parent in $parents
+            satisfies 
+              for $innerParent in $parents
+                return if ($parent/@name/data() != $innerParent/@name/data()) then (
+                  functx:is-value-in-sequence($parent/@name/data(), mba:getAncestors($innerParent)/@name/data())
+                ) else () :)
+
 
