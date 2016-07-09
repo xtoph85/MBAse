@@ -482,6 +482,22 @@ declare function sc:getInitialStates($state) as element()* {
   )
 };
 
+
+declare function sc:getAllStates($scxml) as element()* {
+  $scxml//(sc:state | sc:parallel | sc:final)
+};
+
+(: this method checks if a scxml-state is equal to another scxml-state from a refined scxml-model :)
+declare function sc:isOriginalStateEqualToStateFromRefined($originalState, $refinedState) as xs:boolean {
+  let $idOfStateOriginal := $originalState/@id
+  let $idOfStateRefined := $refinedState/@id
+
+  let $idOfParentNodeOriginal :=  $originalState/../(@name | @id)
+  let $idOfParentNodeRefined := $refinedState/../(@name | id)
+
+  return $idOfStateOriginal = $idOfStateRefined and $idOfParentNodeOriginal = $idOfParentNodeRefined
+};
+
 declare function sc:isCompoundState($state as element()) as xs:boolean {
   ( fn:exists($state/sc:state) or
     fn:exists($state/sc:parallel) ) and
