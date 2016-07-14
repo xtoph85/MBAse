@@ -18,6 +18,52 @@ declare function scc:getAllStates($scxml) as element()* {
     $scxml//(sc:state | sc:parallel | sc:final)
 };
 
+(: this function returns all states (including their substates) of an original model from its' refined model :)
+declare function scc:getAllOriginalStatesFromRefined($scxmlOriginal, $scxmlRefined) as element()* {
+    let $statesOriginal := scc:getAllStates($scxmlOriginal)
+    let $statesRefined := scc:getAllStates($scxmlRefined)
+
+    let $refinedStatesFromOriginal :=
+        for $refinedState in $statesRefined
+        where functx:is-value-in-sequence($refinedState/@id, $statesOriginal/@id)
+        return $refinedState
+
+    return $refinedStatesFromOriginal
+};
+
+declare function scc:getAllRelevantStateIdsRelevantToOriginalFromRefined($originalStates) {
+    for $state in $originalStates
+        return ($state/@id/data(), sc:getChildStates($state)/@id/data())
+};
+
+declare function scc:getAllRefinedTransitionsWithRelevantTargetState($scxmlOriginal, $scxmlRefined) as element()* {
+    let $refinedStatesFromOriginal := scc:getAllOriginalStatesFromRefined($scxmlOriginal, $scxmlRefined)
+
+    (: return all transitions with relevant or no target state :)
+    let $allStateIdsRelevantToOriginalModel := scc:getAllRelevantStateIdsRelevantToOriginalFromRefined($refinedStatesFromOriginal)
+    let $refinedTransitionsWithRelevantTargetState :=
+        for $transition in scc:getAllStates($scxmlRefined)//sc:transition
+        where functx:is-value-in-sequence($transition/@target/data(), $allStateIdsRelevantToOriginalModel) or not($transition/@target)
+        return $transition
+
+    return $refinedTransitionsWithRelevantTargetState
+};
+
+declare function scc:getAllRefinedTransitionsWithRelevantSourceAndTargetState($scxmlOriginal, $scxmlRefined) as element()* {
+    (: get rid of transitions that have source AND target state (or no target state) that is not available in original model  :)
+    let $refinedTransitionsWithRelevantSourceAndTargetState :=
+        for $transition in scc:getAllRefinedTransitionsWithRelevantTargetState($scxmlOriginal, $scxmlRefined)
+        return if ((not(functx:is-value-in-sequence($transition/../@id/data(), scc:getAllStates($scxmlOriginal)/@id/data())) and
+                not(functx:is-value-in-sequence($transition/@target/data(), scc:getAllStates($scxmlOriginal)/@id/data()))) and
+                not(fn:empty($transition/@target))
+        ) then (
+                ()
+            ) else (
+                $transition
+            )
+    return $refinedTransitionsWithRelevantSourceAndTargetState
+};
+
 (: this function checks if a scxml-state is equal to another scxml-state from a refined scxml-model :)
 declare function scc:isOriginalStateEqualToStateFromRefined($originalState, $refinedState) as xs:boolean {
     let $idOfStateOriginal := $originalState/@id
@@ -46,7 +92,7 @@ declare function scc:isEveryOriginalStateInRefined($originalStates, $refinedStat
 };
 
 
-declare function scc:compareTransitions($origTransition as element(),
+    declare function scc:compareTransitions($origTransition as element(),
         $newTransition as element()
 ) as xs:boolean {
 (:
