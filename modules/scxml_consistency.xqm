@@ -64,6 +64,24 @@ declare function scc:getAllRefinedTransitionsWithRelevantSourceAndTargetState($s
     return $refinedTransitionsWithRelevantSourceAndTargetState
 };
 
+(: this functions check if all transitions from U are available in U' and no new transitions between states in U are added in U' :)
+declare function scc:isEveryOriginalTransitionInRefined($scxmlOriginal, $scxmlRefined) as xs:boolean {
+    let $statesOriginal := scc:getAllStates($scxmlOriginal)
+    let $originalTransitions := $statesOriginal//sc:transition
+    let $refinedTransitionsToCheck :=  scc:getAllRefinedTransitionsWithRelevantSourceAndTargetState($scxmlOriginal, $scxmlRefined)
+
+    let $noOfMatchingTransitionsList :=
+        for $orginalTransition in $originalTransitions
+        let $matchingTransitions :=
+            for $refinedTransition in $refinedTransitionsToCheck
+            return if (scc:compareTransitions($orginalTransition, $refinedTransition)) then (
+                true()
+            ) else ()
+        return fn:count($matchingTransitions)
+
+    return every $noOfMatchingTransitions in $noOfMatchingTransitionsList satisfies ($noOfMatchingTransitions = 1)
+};
+
 (: this function checks if a scxml-state is equal to another scxml-state from a refined scxml-model :)
 declare function scc:isOriginalStateEqualToStateFromRefined($originalState, $refinedState) as xs:boolean {
     let $idOfStateOriginal := $originalState/@id
@@ -92,7 +110,7 @@ declare function scc:isEveryOriginalStateInRefined($originalStates, $refinedStat
 };
 
 
-    declare function scc:compareTransitions($origTransition as element(),
+declare function scc:compareTransitions($origTransition as element(),
         $newTransition as element()
 ) as xs:boolean {
 (:

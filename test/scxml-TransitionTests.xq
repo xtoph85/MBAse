@@ -95,12 +95,84 @@ let $scxmlRentalRefined := <sc:scxml name="RenterType">
 								<sc:transition event="cancel" target="Cancelled"/>
 							</sc:state>
 						</sc:state>
-						<sc:state id="Cancelled">
-							<sc:transition event="discontinue" target="Discontinued"/>
-						</sc:state>
+            <sc:parallel id="ParalleShit">
+						  <sc:state id="Cancelled">
+							  <sc:transition event="discontinue" target="Discontinued"/>
+						  </sc:state>
+              <sc:state id="NotRelevant">
+              </sc:state>
+             </sc:parallel>
 						<sc:state id="Discontinued" mba:isArchiveState="true"/>
 					</sc:scxml>
          
           
 let $statesOriginal := scc:getAllStates($scxmlRentalOriginal)
 let $statesRefined := scc:getAllStates($scxmlRentalRefined)
+
+let $refinedStatesFromOriginal := scc:getAllOriginalStatesFromRefined($scxmlRentalOriginal, $scxmlRentalRefined)
+
+
+(: List state and all his substates :)
+let $stateOrSubstateList :=  ($refinedStatesFromOriginal[2]/@id/data() , sc:getChildStates($refinedStatesFromOriginal[2])/@id/data()) 
+
+(: return all transitions with relevant or no target state :)
+let $allStatesRelevantToOriginalModel := scc:getAllRelevantStateIdsRelevantToOriginalFromRefined($refinedStatesFromOriginal)
+let $refinedTransitionsWithRelevantTargetState :=
+  for $transition in $statesRefined//sc:transition
+    where functx:is-value-in-sequence($transition/@target/data(), $allStatesRelevantToOriginalModel) or not($transition/@target)
+    return $transition
+    
+(: get rid of transitions that have source AND target state that is not available in original model :)
+let $refinedTransitionsWithRelevantSourceAndTargetState :=
+  for $transition in $refinedTransitionsWithRelevantTargetState
+  return if ((not(functx:is-value-in-sequence($transition/../@id/data(), $statesOriginal/@id/data())) and 
+            not(functx:is-value-in-sequence($transition/@target/data(), $statesOriginal/@id/data()))) and
+            not(fn:empty($transition/@target))
+          ) then (
+    ()
+  ) else (
+    $transition
+  )
+
+let $originalTranstionForTestingPurposes := ($statesOriginal/sc:transition[2])[1]
+
+(: return scc:compareTransitions($originalTranstionForTestingPurposes, $refinedTransitionsWithRelevantTargetState[1]) :)
+
+  
+let $refinedTransitionsToCheck :=  scc:getAllRefinedTransitionsWithRelevantSourceAndTargetState($scxmlRentalOriginal, $scxmlRentalRefined)
+(:return not(functx:is-value-in-sequence($refinedTransitionsWithRelevantTargetState[6]/@target/data(),  $statesOriginal/@id/data())) :)
+(: return $statesRefined[@id = $statesOriginal[1]/@id]:)
+
+
+let $originalTransitions := $statesOriginal//sc:transition
+
+let $check :=
+  for $orginalTransition in $originalTransitions
+   for $refinedTransition in $refinedTransitionsToCheck
+    (: return if (scc:compareTransitions($orginalTransition, $refinedTransition)) then (
+       true()
+     ) else () :)
+     return scc:compareTransitions($orginalTransition, $refinedTransition)
+     
+let $checkKathi :=
+   for $orginalTransition in $originalTransitions
+   let $kathiZwischenDings :=
+   for $refinedTransition in $refinedTransitionsToCheck
+    return if (scc:compareTransitions($orginalTransition, $refinedTransition)) then (
+       true()
+     ) else ()
+   return fn:count($kathiZwischenDings)
+ 
+     (: let $zwischenDings :=
+      some $refinedTransition in $refinedTransitionsToCheck satisfies (scc:compareTransitions($orginalTransition, $refinedTransition))
+      
+     return fn:count($zwischenDings) :)
+ 
+(: return fn:count($originalTransitions) = fn:count($check) :)
+
+(: let $result := every $checkDingens in $checkKathi satisfies ($checkDingens = 1)
+return $result :)
+
+scc:isEveryOriginalTransitionInRefined($scxmlOriginal, $scxmlRefined)
+
+
