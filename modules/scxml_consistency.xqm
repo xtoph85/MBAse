@@ -18,6 +18,12 @@ declare function scc:getAllStates($scxml) as element()* {
     $scxml//(sc:state | sc:parallel | sc:final)
 };
 
+declare function scc:getStateAndSubstates($scxml as element(),
+        $state as xs:string
+) as xs:string* {
+    $scxml//(sc:state | sc:parallel | sc:final)[@id = $state]/(descendant-or-self::sc:state | descendant-or-self::sc:parallel | descendant-or-self::sc:final)/fn:string(@id)
+};
+
 (: this function returns all states (including their substates) of an original model from its' refined model :)
 declare function scc:getAllOriginalStatesFromRefined($scxmlOriginal, $scxmlRefined) as element()* {
     let $statesOriginal := scc:getAllStates($scxmlOriginal)
@@ -163,12 +169,6 @@ declare function scc:compareTransitions($origTransition as element(),
             true()
         else
             false()
-};
-
-declare function scc:getStateAndSubstates($scxml as element(),
-        $state as xs:string
-) as xs:string* {
-    $scxml//(sc:state | sc:parallel | sc:final)[@id = $state]/(descendant-or-self::sc:state | descendant-or-self::sc:parallel | descendant-or-self::sc:final)/fn:string(@id)
 };
 
 declare function scc:compareConditions($origCond as xs:string,
