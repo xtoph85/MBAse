@@ -68,18 +68,32 @@ declare function scc:getAllRefinedTransitionsWithRelevantSourceAndTargetState($s
 declare function scc:isEveryOriginalTransitionInRefined($scxmlOriginal, $scxmlRefined) as xs:boolean {
     let $statesOriginal := scc:getAllStates($scxmlOriginal)
     let $originalTransitions := $statesOriginal//sc:transition
-    let $refinedTransitionsToCheck :=  scc:getAllRefinedTransitionsWithRelevantSourceAndTargetState($scxmlOriginal, $scxmlRefined)
+    let $refinedTransitionsToCheck := scc:getAllRefinedTransitionsWithRelevantSourceAndTargetState($scxmlOriginal, $scxmlRefined)
 
-    let $noOfMatchingTransitionsList :=
-        for $orginalTransition in $originalTransitions
-        let $matchingTransitions :=
-            for $refinedTransition in $refinedTransitionsToCheck
-            return if (scc:compareTransitions($orginalTransition, $refinedTransition)) then (
-                true()
-            ) else ()
-        return fn:count($matchingTransitions)
+    (: if number of refinedTransitionsToCheck is greater than number of originalTransitions, a new transition between existing states has been introduced
+        else if number is smaller, a transition has been removed. both is not allowed :)
+    return if (fn:count($refinedTransitionsToCheck) = fn:count($originalTransitions)) then (
+        let $noOfMatchingTransitionsList :=
+            for $orginalTransition in $originalTransitions
+            let $matchingTransitions :=
+                for $refinedTransition in $refinedTransitionsToCheck
+                return if (scc:compareTransitions($orginalTransition, $refinedTransition)) then (
+                    true()
+                ) else ()
+            return fn:count($matchingTransitions)
 
-    return every $noOfMatchingTransitions in $noOfMatchingTransitionsList satisfies ($noOfMatchingTransitions = 1)
+        return every $noOfMatchingTransitions in $noOfMatchingTransitionsList satisfies ($noOfMatchingTransitions = 1)
+    ) else (
+        if (fn:count($refinedTransitionsToCheck) > fn:count($originalTransitions)) then (
+            error(QName('http://www.dke.jku.at/MBA/err',
+                    'BehaviorConsistencyTransitionCheck'),
+                    'Illegal transition between states of original model introduced in refined model')
+        ) else (
+            error(QName('http://www.dke.jku.at/MBA/err',
+                    'BehaviorConsistencyTransitionCheck'),
+                    'Required transition of original model removed in refined model')
+            )
+    )
 };
 
 (: this function checks if a scxml-state is equal to another scxml-state from a refined scxml-model :)
@@ -102,9 +116,13 @@ declare function scc:isEveryOriginalStateInRefined($originalStates, $refinedStat
     let $allStatesFromOriginalAreOk :=
         every $originalState in $originalStates satisfies
         for $refinedState in $refinedStates
-        return if (scc:isOriginalStateEqualToStateFromRefined($originalState, $refinedState)) then(
+        return if (scc:isOriginalStateEqualToStateFromRefined($originalState, $refinedState)) then (
             true()
-        ) else ()
+        ) else (
+            error(QName('http://www.dke.jku.at/MBA/err',
+                    'BehaviorConsistencyStateCheck'),
+                    concat('Refined model is missing state or substate with id "', $originalState/@id/data(), '"'))
+        )
 
     return  $allStatesFromOriginalAreOk
 };
