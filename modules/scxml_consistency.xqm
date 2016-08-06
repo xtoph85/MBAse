@@ -163,7 +163,7 @@ declare function scc:compareTransitions($origTransition as element(),
                 (: 2. :)(not($origTransition/@target or $newTransition/@target)
                 or functx:is-value-in-sequence(fn:string($newTransition/@target), $origTargetAndSubstates)
                 or (not($origTransition/@target) and functx:is-value-in-sequence($newTransition/@target, $origSourceAndSubstates))) and
-                (: 3&4:)(not($origTransition/@cond) or scc:compareConditions($origTransition/@cond, $newTransition/@cond)) and
+                (: 3&4:)(not($origTransition/@cond) or (($newTransition/@cond) and scc:compareConditions($origTransition/@cond, $newTransition/@cond))) and
                 (: 5. :)(not($origEvent) or scc:compareEvents($origEvent, fn:string($newTransition/@event)))
         ) then
             true()
@@ -171,12 +171,16 @@ declare function scc:compareTransitions($origTransition as element(),
             false()
 };
 
-declare function scc:compareConditions($origCond as xs:string,
-        $newCond as xs:string
-) as xs:boolean {
+declare function scc:compareConditions($origCond as xs:string, $newCond as xs:string) as xs:boolean {
+    (: original clause is not modified :)
     (fn:compare($origCond, $newCond) = 0) or
+            (: 'and' is added after original clause:)
             ((fn:compare($origCond, fn:substring($newCond, 1, fn:string-length($origCond))) = 0) and
-                    (fn:compare(' and ', fn:substring($newCond, fn:string-length($origCond) + 1, 5)) = 0))
+                    (fn:compare(' and ', fn:substring($newCond, fn:string-length($origCond) + 1, 5)) = 0)) or
+            (: 'and' is added before original clause :)
+            ((fn:compare($origCond, fn:substring($newCond, fn:string-length($newCond) - fn:string-length($origCond) + 1, fn:string-length($newCond))) = 0)) and
+                    (fn:compare(' and', fn:substring($newCond, fn:string-length($newCond) - fn:string-length($origCond) - 4, 4)) = 0)
+
 };
 
 declare function scc:compareEvents($origEvent as xs:string,

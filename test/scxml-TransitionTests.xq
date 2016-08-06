@@ -323,7 +323,7 @@ let $scxmlRentalRefined := <sc:scxml name="RenterType">
 return scc:isEveryOriginalTransitionInRefined($scxmlRentalOriginal, $scxmlRentalRefined)  :)
 
 (: Check if replaced event descriptor in refined model is detected. expected result: false
-State "InDevelopment" - transition with targetstate "Active" has another event descriptor in refined model:)
+State "InDevelopment" - transition with targetstate "Active" has another event descriptor in refined model
 let $scxmlRentalRefined := <sc:scxml name="RenterType">
 						<sc:datamodel>
 							<sc:data id="description">Refined Model</sc:data>
@@ -352,10 +352,218 @@ let $scxmlRentalRefined := <sc:scxml name="RenterType">
 						<sc:state id="Discontinued" mba:isArchiveState="true"/>
 					</sc:scxml>
     
-return scc:isEveryOriginalTransitionInRefined($scxmlRentalOriginal, $scxmlRentalRefined)
+return scc:isEveryOriginalTransitionInRefined($scxmlRentalOriginal, $scxmlRentalRefined) :)
 
-(: Test Cases: 
- - Additional Condition AND-Clause
- - Different Source/Target-States (Already done)
- - Modified Condition (not AND) -> should fail
- - Wrong Source state (not state or substate) for condition -> should fail  :)
+(: Check if transition with wrong source state is detected. expected result: false
+Transition "setMaximumRate" is no longer nested in state "InDevelopment" but in state "Active" (substate of "OnOffer")
+
+let $scxmlRentalRefined := <sc:scxml name="RenterType">
+						<sc:datamodel>
+							<sc:data id="description">Refined Model</sc:data>
+							<sc:data id="_event"/>
+							<sc:data id="_x"/>
+						</sc:datamodel>
+						<sc:initial>
+							<sc:transition target="InDevelopment"/>
+						</sc:initial>
+						<sc:state id="InDevelopment">
+							<sc:transition event="launch" target="Active"/>
+						</sc:state>
+						<sc:state id="OnOffer">
+							<sc:state id="Active">
+								<sc:transition event="openRental"/>
+                <sc:transition event="setMaximumRate"/>
+								<sc:transition event="phaseOut" target="PhasingOut"/>
+							</sc:state>
+							<sc:state id="PhasingOut">
+								<sc:transition event="cancel" target="Cancelled"/>
+							</sc:state>
+						</sc:state>
+						  <sc:state id="Cancelled">
+							  <sc:transition event="discontinue" target="Discontinued"/>
+						  </sc:state>
+						<sc:state id="Discontinued" mba:isArchiveState="true"/>
+					</sc:scxml>
+    
+return scc:isEveryOriginalTransitionInRefined($scxmlRentalOriginal, $scxmlRentalRefined)  :)
+
+(: Check if transition with modified condition (additional AND-Clause) is accepted. expected result: true
+A condition is added to transition "setMaximumRate" in original scxml and is extended by and clause in refined scxml :)
+let $scxmlRentalOriginalWithCondition :=<sc:scxml name="RenterType">
+					<sc:datamodel>
+					  <sc:data id="_event"/>
+					  <sc:data id="_x">
+					  </sc:data>
+            <sc:data id="creditScore"/>
+					</sc:datamodel>
+					<sc:initial>
+					  <sc:transition target="InDevelopment"/>
+					</sc:initial>
+					<sc:state id="InDevelopment">
+					  <sc:transition event="setMaximumRate" cond="$creditScore &gt; 0"/>
+					  <sc:transition event="launch" target="OnOffer"/>
+					</sc:state>
+					<sc:state id="OnOffer">
+						<sc:transition event="openRental"/>
+						<sc:transition event="cancel" target="Cancelled"/>
+					</sc:state>
+					<sc:state id="Cancelled">
+						<sc:transition event="discontinue" target="Discontinued"/>
+					</sc:state>
+					<sc:state id="Discontinued" mba:isArchiveState="true"/>
+				</sc:scxml>
+        
+
+let $scxmlRentalRefined := <sc:scxml name="RenterType">
+						<sc:datamodel>
+							<sc:data id="description">Refined Model</sc:data>
+							<sc:data id="_event"/>
+							<sc:data id="_x"/>
+              <sc:data id="afternoon"/>
+						</sc:datamodel>
+						<sc:initial>
+							<sc:transition target="InDevelopment"/>
+						</sc:initial>
+						<sc:state id="InDevelopment">
+							<sc:transition event="setMaximumRate" cond="$afternoon and $creditScore &gt; 0"/>
+							<sc:transition event="launch" target="Active"/>
+						</sc:state>
+						<sc:state id="OnOffer">
+							<sc:state id="Active">
+								<sc:transition event="openRental"/>
+								<sc:transition event="phaseOut" target="PhasingOut"/>
+							</sc:state>
+							<sc:state id="PhasingOut">
+								<sc:transition event="cancel" target="Cancelled"/>
+							</sc:state>
+						</sc:state>
+						  <sc:state id="Cancelled">
+							  <sc:transition event="discontinue" target="Discontinued"/>
+						  </sc:state>
+						<sc:state id="Discontinued" mba:isArchiveState="true"/>
+					</sc:scxml>
+
+let $origCond := "$creditScore &gt; 0"
+let $newCond := "$afternoon and $creditScore &gt; 0"
+
+(: return fn:compare($origCond, fn:substring($newCond, fn:string-length($newCond) - fn:string-length($origCond)+ 1, fn:string-length($newCond)))  
+
+return fn:compare(' and', fn:substring($newCond, fn:string-length($newCond) - fn:string-length($origCond) - 4, 4)) :)
+
+
+return scc:isEveryOriginalTransitionInRefined($scxmlRentalOriginalWithCondition, $scxmlRentalRefined)  
+
+(: Check if transition that is missing in refined model is detected. expected result: false
+A condition is added to transition "setMaximumRate" in original scxml and is not available in refined scxml
+let $scxmlRentalOriginalWithCondition :=<sc:scxml name="RenterType">
+					<sc:datamodel>
+					  <sc:data id="_event"/>
+					  <sc:data id="_x">
+					  </sc:data>
+            <sc:data id="creditScore"/>
+					</sc:datamodel>
+					<sc:initial>
+					  <sc:transition target="InDevelopment"/>
+					</sc:initial>
+					<sc:state id="InDevelopment">
+					  <sc:transition event="setMaximumRate" cond="$creditScore &gt; 0"/>
+					  <sc:transition event="launch" target="OnOffer"/>
+					</sc:state>
+					<sc:state id="OnOffer">
+						<sc:transition event="openRental"/>
+						<sc:transition event="cancel" target="Cancelled"/>
+					</sc:state>
+					<sc:state id="Cancelled">
+						<sc:transition event="discontinue" target="Discontinued"/>
+					</sc:state>
+					<sc:state id="Discontinued" mba:isArchiveState="true"/>
+				</sc:scxml>
+        
+
+let $scxmlRentalRefined := <sc:scxml name="RenterType">
+						<sc:datamodel>
+							<sc:data id="description">Refined Model</sc:data>
+							<sc:data id="_event"/>
+							<sc:data id="_x"/>
+						</sc:datamodel>
+						<sc:initial>
+							<sc:transition target="InDevelopment"/>
+						</sc:initial>
+						<sc:state id="InDevelopment">
+							<sc:transition event="setMaximumRate"/>
+							<sc:transition event="launch" target="Active"/>
+						</sc:state>
+						<sc:state id="OnOffer">
+							<sc:state id="Active">
+								<sc:transition event="openRental"/>
+								<sc:transition event="phaseOut" target="PhasingOut"/>
+							</sc:state>
+							<sc:state id="PhasingOut">
+								<sc:transition event="cancel" target="Cancelled"/>
+							</sc:state>
+						</sc:state>
+						  <sc:state id="Cancelled">
+							  <sc:transition event="discontinue" target="Discontinued"/>
+						  </sc:state>
+						<sc:state id="Discontinued" mba:isArchiveState="true"/>
+					</sc:scxml>
+
+return scc:isEveryOriginalTransitionInRefined($scxmlRentalOriginalWithCondition, $scxmlRentalRefined) :)
+
+(: Check if transition with modified condition (replace original condition) is accepted. expected result: false
+A condition is added to transition "setMaximumRate" in original scxml and is replace by onther condition in refined scxml 
+let $scxmlRentalOriginalWithCondition :=<sc:scxml name="RenterType">
+					<sc:datamodel>
+					  <sc:data id="_event"/>
+					  <sc:data id="_x">
+					  </sc:data>
+            <sc:data id="creditScore"/>
+					</sc:datamodel>
+					<sc:initial>
+					  <sc:transition target="InDevelopment"/>
+					</sc:initial>
+					<sc:state id="InDevelopment">
+					  <sc:transition event="setMaximumRate" cond="$creditScore &gt; 0"/>
+					  <sc:transition event="launch" target="OnOffer"/>
+					</sc:state>
+					<sc:state id="OnOffer">
+						<sc:transition event="openRental"/>
+						<sc:transition event="cancel" target="Cancelled"/>
+					</sc:state>
+					<sc:state id="Cancelled">
+						<sc:transition event="discontinue" target="Discontinued"/>
+					</sc:state>
+					<sc:state id="Discontinued" mba:isArchiveState="true"/>
+				</sc:scxml>
+        
+
+let $scxmlRentalRefined := <sc:scxml name="RenterType">
+						<sc:datamodel>
+							<sc:data id="description">Refined Model</sc:data>
+							<sc:data id="_event"/>
+							<sc:data id="_x"/>
+              <sc:data id="$afternoon"/>
+						</sc:datamodel>
+						<sc:initial>
+							<sc:transition target="InDevelopment"/>
+						</sc:initial>
+						<sc:state id="InDevelopment">
+							<sc:transition event="setMaximumRate" cond="$afternoon"/>
+							<sc:transition event="launch" target="Active"/>
+						</sc:state>
+						<sc:state id="OnOffer">
+							<sc:state id="Active">
+								<sc:transition event="openRental"/>
+								<sc:transition event="phaseOut" target="PhasingOut"/>
+							</sc:state>
+							<sc:state id="PhasingOut">
+								<sc:transition event="cancel" target="Cancelled"/>
+							</sc:state>
+						</sc:state>
+						  <sc:state id="Cancelled">
+							  <sc:transition event="discontinue" target="Discontinued"/>
+						  </sc:state>
+						<sc:state id="Discontinued" mba:isArchiveState="true"/>
+					</sc:scxml>
+
+return scc:isEveryOriginalTransitionInRefined($scxmlRentalOriginalWithCondition, $scxmlRentalRefined) :)
