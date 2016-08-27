@@ -40,43 +40,6 @@ let $scxmlRentalRefined := <sc:scxml name="RenterType">
 									<state ref="Discontinued"/>
 								</currentStatus>
 								<externalEventQueue xmlns=""/>
-								<xes:log xmlns:xes="http://www.xes-standard.org/">
-									<xes:trace>
-										<xes:event>
-											<xes:date key="time:timestamp" value="2016-01-01T06:00:00.000+02:00"/>
-											<xes:string key="sc:initial" value="RenterType"/>
-											<xes:string key="sc:target" value="InDevelopment"/>
-										</xes:event>
-										<xes:event>
-											<xes:date key="time:timestamp" value="2016-01-01T07:00:00.500+02:00"/>
-											<xes:string key="sc:state" value="InDevelopment"/>
-											<xes:string key="concept:name" value="launch"/>
-											<xes:string key="sc:event" value="launch"/>
-											<xes:string key="sc:target" value="Active"/>
-										</xes:event>
-										<xes:event>
-											<xes:date key="time:timestamp" value="2016-01-01T07:30:00.500+02:00"/>
-											<xes:string key="sc:state" value="Active"/>
-											<xes:string key="concept:name" value="phaseOut"/>
-											<xes:string key="sc:event" value="phaseOut"/>
-											<xes:string key="sc:target" value="PhasingOut"/>
-										</xes:event>
-										<xes:event>
-											<xes:date key="time:timestamp" value="2016-01-01T08:30:00.500+02:00"/>
-											<xes:string key="sc:state" value="PhasingOut"/>
-											<xes:string key="concept:name" value="cancel"/>
-											<xes:string key="sc:event" value="cancel"/>
-											<xes:string key="sc:target" value="Cancelled"/>
-										</xes:event>
-										<xes:event>
-											<xes:date key="time:timestamp" value="2016-01-01T09:00:00.500+02:00"/>
-											<xes:string key="sc:state" value="Cancelled"/>
-											<xes:string key="concept:name" value="discontinue"/>
-											<xes:string key="sc:event" value="discontinue"/>
-											<xes:string key="sc:target" value="Discontinued"/>
-										</xes:event>
-									</xes:trace>
-								</xes:log>
 							</sc:data>
 						</sc:datamodel>
 						<sc:initial>
@@ -105,10 +68,10 @@ let $scxmlRentalRefined := <sc:scxml name="RenterType">
 let $statesOriginal := scc:getAllStates($scxmlRentalOriginal)
 let $statesRefined := scc:getAllStates($scxmlRentalRefined)
 
-(: Check if all states from U are available in U' and have the correct ancestor (substates!)    :)   
-return scc:isEveryOriginalStateInRefined($statesOriginal, $statesRefined)  
+(: Check if all states from U are available in U' and have the correct ancestor (substates!)      :)   
+return scc:isEveryOriginalStateInRefined($statesOriginal, $statesRefined)
 
-(: Check if all states from U are available in U' -> state "Discontinued" from U is missing U' -> expected false          
+(: Check if all states from U are available in U' -> state "Discontinued" from U is missing U' -> expected false         
 let $scxmlRentalRefinedMissingState := <sc:scxml name="RenterType">
 						<sc:datamodel>
 							<sc:data id="description">Test MBA for cancel early cancel late</sc:data>
@@ -183,9 +146,9 @@ let $scxmlRentalRefinedMissingState := <sc:scxml name="RenterType">
           
 let $scxmlRentalMissingStates := scc:getAllStates($scxmlRentalRefinedMissingState) 
 
-return scc:isEveryOriginalStateInRefined($statesOriginal, $scxmlRentalMissingStates) :)
+return scc:isEveryOriginalStateInRefined($statesOriginal, $scxmlRentalMissingStates) :) 
 
-(:Check if all states from U are in U' -> state "Discontinued" from U is "moved" in U' and has wrong ancestor -> expected: false
+(:Check if all states from U are in U' -> state "Discontinued" from U is "moved" in U' and has wrong ancestor -> expected: false 
 let $scxmlRentalRefinedStateHasWrongAncestor := <sc:scxml name="RenterType">
 						<sc:datamodel>
 							<sc:data id="description">Test MBA for cancel early cancel late</sc:data>
@@ -260,7 +223,7 @@ let $scxmlRentalRefinedStateHasWrongAncestor := <sc:scxml name="RenterType">
 					</sc:scxml>
 
 let $scxmlRentalRefinedStates := scc:getAllStates($scxmlRentalRefinedStateHasWrongAncestor)     
-return scc:isEveryOriginalStateInRefined($statesOriginal, $scxmlRentalRefinedStates)    :)
+return scc:isEveryOriginalStateInRefined($statesOriginal, $scxmlRentalRefinedStates)     :)
 
 (: Check if introducing a parallel region with an existing state works; expected result: true 
 let $scxmlRentalRefinedParallelRegion := <sc:scxml name="RenterType">
@@ -275,56 +238,19 @@ let $scxmlRentalRefinedParallelRegion := <sc:scxml name="RenterType">
 									<state ref="Discontinued"/>
 								</currentStatus>
 								<externalEventQueue xmlns=""/>
-								<xes:log xmlns:xes="http://www.xes-standard.org/">
-									<xes:trace>
-										<xes:event>
-											<xes:date key="time:timestamp" value="2016-01-01T06:00:00.000+02:00"/>
-											<xes:string key="sc:initial" value="RenterType"/>
-											<xes:string key="sc:target" value="InDevelopment"/>
-										</xes:event>
-										<xes:event>
-											<xes:date key="time:timestamp" value="2016-01-01T07:00:00.500+02:00"/>
-											<xes:string key="sc:state" value="InDevelopment"/>
-											<xes:string key="concept:name" value="launch"/>
-											<xes:string key="sc:event" value="launch"/>
-											<xes:string key="sc:target" value="Active"/>
-										</xes:event>
-										<xes:event>
-											<xes:date key="time:timestamp" value="2016-01-01T07:30:00.500+02:00"/>
-											<xes:string key="sc:state" value="Active"/>
-											<xes:string key="concept:name" value="phaseOut"/>
-											<xes:string key="sc:event" value="phaseOut"/>
-											<xes:string key="sc:target" value="PhasingOut"/>
-										</xes:event>
-										<xes:event>
-											<xes:date key="time:timestamp" value="2016-01-01T08:30:00.500+02:00"/>
-											<xes:string key="sc:state" value="PhasingOut"/>
-											<xes:string key="concept:name" value="cancel"/>
-											<xes:string key="sc:event" value="cancel"/>
-											<xes:string key="sc:target" value="Cancelled"/>
-										</xes:event>
-										<xes:event>
-											<xes:date key="time:timestamp" value="2016-01-01T09:00:00.500+02:00"/>
-											<xes:string key="sc:state" value="Cancelled"/>
-											<xes:string key="concept:name" value="discontinue"/>
-											<xes:string key="sc:event" value="discontinue"/>
-											<xes:string key="sc:target" value="Discontinued"/>
-										</xes:event>
-									</xes:trace>
-								</xes:log>
 							</sc:data>
 						</sc:datamodel>
 						<sc:initial>
 							<sc:transition target="InDevelopment"/>
 						</sc:initial>
-             <sc:parallel id="ParallelId">
-						  <sc:state id="InDevelopment">
-							  <sc:transition event="setMaximumRate"/>
-							  <sc:transition event="launch" target="Active"/>
-						  </sc:state>
-              <sc:state id="newState">
-              </sc:state>
-             </sc:parallel>
+						<sc:parallel id="ParallelId">
+							  <sc:state id="InDevelopment">
+								  <sc:transition event="setMaximumRate"/>
+								  <sc:transition event="launch" target="Active"/>
+							  </sc:state>
+							  <sc:state id="newState">
+							  </sc:state>
+						</sc:parallel>
 						<sc:state id="OnOffer">
 							<sc:state id="Active">
 								<sc:transition event="openRental"/>
