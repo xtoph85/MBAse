@@ -124,11 +124,7 @@ declare function scc:isEveryOriginalStateInRefined($originalStates, $refinedStat
         for $refinedState in $refinedStates
         return if (scc:isOriginalStateEqualToStateFromRefined($originalState, $refinedState)) then (
             true()
-        ) else (
-            error(QName('http://www.dke.jku.at/MBA/err',
-                    'BehaviorConsistencyStateCheck'),
-                    concat('Refined model is missing state or substate with id "', $originalState/@id/data(), '"'))
-        )
+        ) else ()
 
     return  $allStatesFromOriginalAreOk
 };
