@@ -24,6 +24,7 @@
  : for the use in dynamically evaluated SCXML expressions.
  
  : @author Christoph Schütz
+ : @author Michael Weichselbaumer
  :)
 module namespace scx='http://www.w3.org/2005/07/scxml/extension/';
 

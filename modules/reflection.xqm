@@ -21,6 +21,7 @@
  : 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
   
  : @author Christoph Schütz
+ : @author Michael Weichselbaumer
  :)
 module namespace reflection='http://www.dke.jku.at/MBA/Reflection';
 

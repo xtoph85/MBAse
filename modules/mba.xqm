@@ -24,6 +24,7 @@
  : databases for multilevel business artifacts (MBAs). 
  
  : @author Christoph Schütz
+ : @author Michael Weichselbaumer
  :)
 module namespace mba = 'http://www.dke.jku.at/MBA';
 
