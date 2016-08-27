@@ -187,3 +187,11 @@ declare function scc:compareEvents($origEvent as xs:string,
                     (fn:compare('.', fn:substring($newEvent, fn:string-length($origEvent) + 1, 1)) = 0))
 };
 
+
+declare function scc:isBehaviorConsistentSpecialization($originalScxml as element(), $refinedScxml as element()) as xs:boolean {
+    let $scxmlOriginalStates := scc:getAllStates($originalScxml)
+    let $scxmlRefinedStates := scc:getAllStates($refinedScxml)
+
+    return (scc:isEveryOriginalStateInRefined($scxmlOriginalStates, $scxmlRefinedStates) and scc:isEveryOriginalTransitionInRefined($originalScxml, $refinedScxml))
+};
+
