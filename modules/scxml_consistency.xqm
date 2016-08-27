@@ -194,4 +194,3 @@ declare function scc:isBehaviorConsistentSpecialization($originalScxml as elemen
 
     return (scc:isEveryOriginalStateInRefined($scxmlOriginalStates, $scxmlRefinedStates) and scc:isEveryOriginalTransitionInRefined($originalScxml, $refinedScxml))
 };
-

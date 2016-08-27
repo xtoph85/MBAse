@@ -27,8 +27,42 @@ module namespace reflection='http://www.dke.jku.at/MBA/Reflection';
 import module namespace mba = 'http://www.dke.jku.at/MBA' at 'mba.xqm';
 import module namespace sc = 'http://www.w3.org/2005/07/scxml' at 'scxml.xqm';
 import module namespace functx = 'http://www.functx.com' at 'functx.xqm';
+import module namespace scc = "http://www.w3.org/2005/07/scxml/consistency/" at 'scxml_consistency.xqm';
 
 declare updating function reflection:setActive($mba  as element(),
                                                $name as xs:string) {
   ()
 };
+
+
+declare function reflection:getRefinedState($state as element(), $subState as element()) as element()* {
+  let $mba := $state/ancestor::mba:mba
+
+    return if (not(mba:getDescendants($mba))) then (
+      let $originalScxml := $state/ancestor::sc:scxml
+
+      let $refinedScxml := copy $c := $originalScxml modify (
+        let $stateCopy := $c//sc:state[@id=$state/@id/data()]
+        return insert node $subState into $stateCopy
+      ) return $c
+
+      return if (scc:isBehaviorConsistentSpecialization($originalScxml, $refinedScxml)) then (
+          $refinedScxml//sc:state[@id=$state/@id/data()]
+      ) else (
+            error(QName('http://www.dke.jku.at/MBA/err',
+                        'RefineStateConsistencyCheck'),
+                        'State cannot be refined because this would result in behavior consistency violation')
+      )
+    ) else (
+      error(QName('http://www.dke.jku.at/MBA/err',
+              'RefineStateDescendantCheck'),
+              concat('State cannot be refined because MBA ', $mba/@name/data(), ' has already descendants'))
+    )
+};
+
+declare updating function reflection:refineState($state as element(), $subState as element()) {
+    let $refinedState := reflection:getRefinedState($state, $subState)
+    return replace node $state with $refinedState
+};
+
+
