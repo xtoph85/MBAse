@@ -67,3 +67,40 @@ declare updating function reflection:refineState($state as element(), $subState 
 };
 
 
+declare function reflection:getParallelRegionExtension($state as element(), $parallelState as element()+, $optionalNodes as element()?) as element()* {
+    let $mba := $state/ancestor::mba:mba
+
+    return if (not(mba:getDescendants($mba))) then (
+        let $originalScxml := $state/ancestor::sc:scxml
+
+        let $refinedScxml := copy $c := $originalScxml modify (
+            let $stateCopy := $c//sc:state[@id=$state/@id/data()]
+            let $newParallelNode := <sc:parallel>
+                {$optionalNodes}
+                {$stateCopy}
+                {$parallelState}
+            </sc:parallel>
+            return replace node $stateCopy with $newParallelNode
+
+        ) return $c
+
+        return if (scc:isBehaviorConsistentSpecialization($originalScxml, $refinedScxml)) then (
+            $refinedScxml//sc:state[@id=$state/@id/data()]/..
+        ) else (
+            error(QName('http://www.dke.jku.at/MBA/err',
+                    'ExtendWithParallelRegionConsistencyCheck'),
+                    'Parallel region cannot be introduced because this would result in behavior consistency violation')
+        )
+    ) else (
+        error(QName('http://www.dke.jku.at/MBA/err',
+                'ExtendWithParallelRegionDescendantCheck'),
+                concat('Parallel region cannot be introduced because MBA ', $mba/@name/data(), ' has already descendants'))
+    )
+};
+
+declare updating function reflection:extendWithParallelRegion($state as element(), $parallelState as element(), $optionalNodes as element()?) {
+    let $parallelRegionNode := reflection:getParallelRegionExtension($state, $parallelState, $optionalNodes)
+    return replace node $state with $parallelRegionNode
+};
+
+

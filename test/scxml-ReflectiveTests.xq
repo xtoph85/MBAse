@@ -52,14 +52,13 @@ declare variable $subState :=
 declare variable $originalState :=  $mbaHolton//sc:state[@id='Running'];
 
 
-
 (: Check if non-updating version of refine state function works.
-Using an MBA that is loaded from file system makes it easier to be sure it has no descendants. expected result: refined state node  :)
+Using an MBA that is loaded from file system makes it easier to be sure it has no descendants. expected result: refined state node  
 let $subState := 
   <sc:state id="RunningGood">   
   </sc:state>
 
-return reflection:getRefinedState($originalState, $subState)    
+return reflection:getRefinedState($originalState, $subState)    :)
 
 (: Chif if a final node can also be inserted using the refine state function. expected result: refined state node 
 let $finalState := 
@@ -87,3 +86,31 @@ For this purpose MBA is loaded from database
 declare variable $originalStateFromDB :=  $mbaHoltonFromDB//sc:state[@id='Running'];
 reflection:refineState($originalStateFromDB, $subState) :)
 
+
+(: Check if extending with parallel region works. expected: parallel node  :)
+let $originalState :=  $mbaHolton//sc:state[@id='Restructuring']
+let $parallelState := <sc:state id="Renovating"></sc:state>
+
+return reflection:getParallelRegionExtension($originalState, $parallelState, ())
+
+
+(: Check if extending with parallel region fails because MBA has ancestors: expected: error  
+let $originalState := $mbaHoltonFromDB//sc:state[@id='Restructuring']
+let $parallelState :=  <sc:state id="Renovating"></sc:state>
+
+return reflection:getParallelRegionExtension($originalState, $parallelState, ()) :)
+
+(: Check if extending with parallel region works if an optionalNode is specified: expected: parallel node 
+let $originalState :=  $mbaHolton//sc:state[@id='Restructuring']
+let $parallelState := <sc:state id="Renovating"></sc:state>
+let $optionalState := <sc:transition event="someOtherEvent" target="Renovating"/>
+
+return reflection:getParallelRegionExtension($originalState, $parallelState, $optionalState) :)
+
+(: Check if extending with parallel region that has multiple nodes in parameter parallelState works. expected parallel node 
+let $originalState :=  $mbaHolton//sc:state[@id='Restructuring']
+let $parallelState := <sc:state id="Renovating"></sc:state> 
+let $parallelState2 := <sc:state id="Evacuating"/>
+let $parallelStates := ($parallelState, $parallelState2)
+
+return reflection:getParallelRegionExtension($originalState, $parallelStates, ()) :)
