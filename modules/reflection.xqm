@@ -117,7 +117,7 @@ declare function reflection:getTransitionWithRefinedPreCondition($transition as 
             let $transitionCopy := $stateCopy//sc:transition[$indexOfTransition]
             let $conditionCopy := $transitionCopy/@cond
 
-            return if (fn:empty($stateCopy//sc:transition[$indexOfTransition]/@cond)) then (
+            return if (fn:empty($conditionCopy)) then (
                 replace node $transitionCopy with functx:add-attributes($transitionCopy, fn:QName('', 'cond'), $condition)
             ) else (
                 replace node $transitionCopy with functx:add-or-update-attributes($transitionCopy, fn:QName('', 'cond'), ($conditionCopy || " and " || $condition))
@@ -129,7 +129,7 @@ declare function reflection:getTransitionWithRefinedPreCondition($transition as 
         ) else (
             error(QName('http://www.dke.jku.at/MBA/err',
                     'RefineTransitionWithPreConditionConsistencyCheck'),
-                    'Transition cannot be refined with precondition because this would result in behavior consistency violation')
+                    concat('Transition cannot be refined with precondition ', $condition, ' because this would result in behavior consistency violation'))
         )
     ) else (
         error(QName('http://www.dke.jku.at/MBA/err',
@@ -140,5 +140,40 @@ declare function reflection:getTransitionWithRefinedPreCondition($transition as 
 
 declare updating function reflection:refinePreCondition($transition as element(), $condition as xs:string) {
     let  $refinedTransition := reflection:getTransitionWithRefinedPreCondition($transition, $condition)
+    return replace node $transition with $refinedTransition
+};
+
+declare function reflection:getTransitionWithRefinendEvents($transition as element(), $event as xs:string) as element()* {
+    let $mba := $transition/ancestor::mba:mba
+
+    return if (not(mba:getDescendants($mba))) then (
+        let $originalScxml := $transition/ancestor::sc:scxml
+
+        let $transitionSourceState := sc:getSourceState($transition)
+        let $indexOfTransition := functx:index-of-node($transitionSourceState//sc:transition, $transition)
+
+        let $refinedScxml := copy $c := $originalScxml modify (
+            let $stateCopy := $c//sc:state[@id = $transitionSourceState/@id/data()]
+            let $transitionCopy := $stateCopy//sc:transition[$indexOfTransition]
+
+            return replace node $transitionCopy with functx:add-or-update-attributes($transitionCopy, fn:QName('', 'event'), ($event))
+        ) return $c
+
+        return if (scc:isBehaviorConsistentSpecialization($originalScxml, $refinedScxml)) then (
+            $refinedScxml//sc:state[@id = $transitionSourceState/@id]//sc:transition[$indexOfTransition]
+        ) else (
+            error(QName('http://www.dke.jku.at/MBA/err',
+                    'RefineTransitionWithEventConsistencyCheck'),
+                    concat('Transition cannot be refined with event ', $event, ' because this would result in behavior consistency violation'))
+        )
+    ) else (
+        error(QName('http://www.dke.jku.at/MBA/err',
+                'RefineTransitionEventCheck'),
+                concat('Transition cannot be refined with event ', $event, ' because MBA ', $mba/@name/data(), ' has already descendants'))
+    )
+};
+
+declare updating function reflection:refineEvent($transition as element(), $event as xs:string) {
+    let  $refinedTransition := reflection:getTransitionWithRefinendEvents($transition, $event)
     return replace node $transition with $refinedTransition
 };
