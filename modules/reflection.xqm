@@ -148,7 +148,6 @@ declare function reflection:getTransitionWithRefinendEvents($transition as eleme
 
     return if (not(mba:getDescendants($mba))) then (
         let $originalScxml := $transition/ancestor::sc:scxml
-
         let $transitionSourceState := sc:getSourceState($transition)
         let $indexOfTransition := functx:index-of-node($transitionSourceState//sc:transition, $transition)
 
@@ -175,5 +174,40 @@ declare function reflection:getTransitionWithRefinendEvents($transition as eleme
 
 declare updating function reflection:refineEvent($transition as element(), $event as xs:string) {
     let  $refinedTransition := reflection:getTransitionWithRefinendEvents($transition, $event)
+    return replace node $transition with $refinedTransition
+};
+
+declare function reflection:getTransitionWithRefinedTarget($transition as element(), $target as xs:string) as element()* {
+    let $mba := $transition/ancestor::mba:mba
+
+    return if (not(mba:getDescendants($mba))) then (
+        let $originalScxml := $transition/ancestor::sc:scxml
+        let $transitionSourceState := sc:getSourceState($transition)
+        let $indexOfTransition := functx:index-of-node($transitionSourceState//sc:transition, $transition)
+
+        let $refinedScxml := copy $c := $originalScxml modify (
+            let $stateCopy := $c//sc:state[@id = $transitionSourceState/@id/data()]
+            let $transitionCopy := $stateCopy//sc:transition[$indexOfTransition]
+
+            return replace node $transitionCopy with functx:add-or-update-attributes($transitionCopy, fn:QName('', 'target'), ($target))
+        ) return $c
+
+        return if (scc:isBehaviorConsistentSpecialization($originalScxml, $refinedScxml)) then (
+            $refinedScxml//sc:state[@id = $transitionSourceState/@id]//sc:transition[$indexOfTransition]
+        ) else (
+            error(QName('http://www.dke.jku.at/MBA/err',
+                    'RefineTransitionWithEventConsistencyCheck'),
+                    concat('Transition cannot be refined with new target ', $target, ' because this would result in behavior consistency violation'))
+        )
+    ) else (
+        error(QName('http://www.dke.jku.at/MBA/err',
+                'RefineTransitionEventCheck'),
+                concat('Transition cannot be refined with new target ', $target, ' because MBA ', $mba/@name/data(), ' has already descendants'))
+    )
+
+};
+
+declare updating function reflection:refineTransitionTarget($transition as element(), $target as xs:string) {
+    let  $refinedTransition := reflection:getTransitionWithRefinedTarget($transition, $target)
     return replace node $transition with $refinedTransition
 };

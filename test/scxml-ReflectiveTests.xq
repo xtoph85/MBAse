@@ -258,3 +258,108 @@ let $transition := $originalState//sc:transition[2]
 let $event := "event2"
 
 return reflection:getTransitionWithRefinendEvents($transition, $event) :)
+
+
+(: Check if refining target of transition that is a valid substate of existing target. expected: refined transition 
+let $inlineMBA := <mba xmlns="http://www.dke.jku.at/MBA" xmlns:sync="http://www.dke.jku.at/MBA/Synchronization" xmlns:sc="http://www.w3.org/2005/07/scxml" name="HoltonHotelChain" hierarchy="parallel" topLevel="business" isDefault="true">
+    <levels>
+      <level name="business"> 
+        <elements>
+          <sc:scxml name="Business">
+            <sc:datamodel>
+              <sc:data id="description">Worldwide hotel chain</sc:data>
+            </sc:datamodel>
+            <sc:initial>
+              <sc:transition target="Restructuring"/>
+            </sc:initial>
+            <sc:state id="Restructuring">
+              <sc:transition event="createAccomodationType">
+                <sync:newDescendant name="$_event/data/name" level="accomodationType"/>
+              </sc:transition>
+              <sc:transition event="event1" cond="existingCondition" target="Running"/>
+            </sc:state>
+            <sc:state id="Running">
+              <sc:transition event="restructure" target="Restructuring"/>
+              <sc:state id="RefinedRunning"/>
+            </sc:state>
+          </sc:scxml>
+        </elements>
+      </level>
+     </levels>
+    </mba>
+
+let $originalState :=  $inlineMBA//sc:state[@id='Restructuring']
+let $transition := $originalState//sc:transition[2]
+let $newTarget := "RefinedRunning"
+
+return reflection:getTransitionWithRefinedTarget($transition, $newTarget) :)
+
+
+
+(: Check if refining target of transition that is not a valid substate of existing target. expected: error 
+let $inlineMBA := <mba xmlns="http://www.dke.jku.at/MBA" xmlns:sync="http://www.dke.jku.at/MBA/Synchronization" xmlns:sc="http://www.w3.org/2005/07/scxml" name="HoltonHotelChain" hierarchy="parallel" topLevel="business" isDefault="true">
+    <levels>
+      <level name="business"> 
+        <elements>
+          <sc:scxml name="Business">
+            <sc:datamodel>
+              <sc:data id="description">Worldwide hotel chain</sc:data>
+            </sc:datamodel>
+            <sc:initial>
+              <sc:transition target="Restructuring"/>
+            </sc:initial>
+            <sc:state id="Restructuring">
+              <sc:transition event="createAccomodationType">
+                <sync:newDescendant name="$_event/data/name" level="accomodationType"/>
+              </sc:transition>
+              <sc:transition event="event1" cond="existingCondition" target="Running"/>
+            </sc:state>
+            <sc:state id="Running">
+              <sc:transition event="restructure" target="Restructuring"/>
+              <sc:state id="RefinedRunning"/>
+            </sc:state>
+          </sc:scxml>
+        </elements>
+      </level>
+     </levels>
+    </mba>
+
+let $originalState :=  $inlineMBA//sc:state[@id='Restructuring']
+let $transition := $originalState//sc:transition[2]
+let $newTarget := "SomeOtherState"
+
+return reflection:getTransitionWithRefinedTarget($transition, $newTarget) :)
+
+(: Check if refining target of transition that has no target. expected: refined transition  :)
+let $inlineMBA := <mba xmlns="http://www.dke.jku.at/MBA" xmlns:sync="http://www.dke.jku.at/MBA/Synchronization" xmlns:sc="http://www.w3.org/2005/07/scxml" name="HoltonHotelChain" hierarchy="parallel" topLevel="business" isDefault="true">
+    <levels>
+      <level name="business"> 
+        <elements>
+          <sc:scxml name="Business">
+            <sc:datamodel>
+              <sc:data id="description">Worldwide hotel chain</sc:data>
+            </sc:datamodel>
+            <sc:initial>
+              <sc:transition target="Restructuring"/>
+            </sc:initial>
+            <sc:state id="Restructuring">
+              <sc:transition event="createAccomodationType">
+                <sync:newDescendant name="$_event/data/name" level="accomodationType"/>
+              </sc:transition>
+              <sc:transition event="event1" cond="existingCondition"/>
+              <sc:state id="RefinedRestructuring"/>
+            </sc:state>
+            <sc:state id="Running">
+              <sc:transition event="restructure" target="Restructuring"/>
+            </sc:state>
+          </sc:scxml>
+        </elements>
+      </level>
+     </levels>
+    </mba>
+
+let $originalState :=  $inlineMBA//sc:state[@id='Restructuring']
+let $transition := $originalState//sc:transition[2]
+let $newTarget := "RefinedRestructuring"
+
+return reflection:getTransitionWithRefinedTarget($transition, $newTarget)
