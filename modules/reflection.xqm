@@ -103,4 +103,42 @@ declare updating function reflection:extendWithParallelRegion($state as element(
     return replace node $state with $parallelRegionNode
 };
 
+declare function reflection:getTransitionWithRefinedPreCondition($transition as element(), $condition as xs:string) as element()* {
+    let $mba := $transition/ancestor::mba:mba
 
+    return if (not(mba:getDescendants($mba))) then (
+        let $originalScxml := $transition/ancestor::sc:scxml
+
+        let $transitionSourceState := sc:getSourceState($transition)
+        let $indexOfTransition := functx:index-of-node($transitionSourceState//sc:transition, $transition)
+
+        let $refinedScxml := copy $c := $originalScxml modify (
+            let $stateCopy := $c//sc:state[@id = $transitionSourceState/@id/data()]
+            let $transitionCopy := $stateCopy//sc:transition[$indexOfTransition]
+            let $conditionCopy := $transitionCopy/@cond
+
+            return if (fn:empty($stateCopy//sc:transition[$indexOfTransition]/@cond)) then (
+                replace node $transitionCopy with functx:add-attributes($transitionCopy, fn:QName('', 'cond'), $condition)
+            ) else (
+                replace node $transitionCopy with functx:add-or-update-attributes($transitionCopy, fn:QName('', 'cond'), ($conditionCopy || " and " || $condition))
+            )
+        ) return $c
+
+        return if (scc:isBehaviorConsistentSpecialization($originalScxml, $refinedScxml)) then (
+            $refinedScxml//sc:state[@id = $transitionSourceState/@id]//sc:transition[$indexOfTransition]
+        ) else (
+            error(QName('http://www.dke.jku.at/MBA/err',
+                    'RefineTransitionWithPreConditionConsistencyCheck'),
+                    'Transition cannot be refined with precondition because this would result in behavior consistency violation')
+        )
+    ) else (
+        error(QName('http://www.dke.jku.at/MBA/err',
+                'RefineTransitionPreConditionCheck'),
+                concat('Transition cannot be refined with condition ', $condition, ' because MBA ', $mba/@name/data(), ' has already descendants'))
+    )
+};
+
+declare updating function reflection:refinePreCondition($transition as element(), $condition as xs:string) {
+    let  $refinedTransition := reflection:getTransitionWithRefinedPreCondition($transition, $condition)
+    return replace node $transition with $refinedTransition
+};

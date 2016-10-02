@@ -87,11 +87,11 @@ declare variable $originalStateFromDB :=  $mbaHoltonFromDB//sc:state[@id='Runnin
 reflection:refineState($originalStateFromDB, $subState) :)
 
 
-(: Check if extending with parallel region works. expected: parallel node  :)
+(: Check if extending with parallel region works. expected: parallel node  
 let $originalState :=  $mbaHolton//sc:state[@id='Restructuring']
 let $parallelState := <sc:state id="Renovating"></sc:state>
 
-return reflection:getParallelRegionExtension($originalState, $parallelState, ())
+return reflection:getParallelRegionExtension($originalState, $parallelState, ()) :)
 
 
 (: Check if extending with parallel region fails because MBA has ancestors: expected: error  
@@ -114,3 +114,46 @@ let $parallelState2 := <sc:state id="Evacuating"/>
 let $parallelStates := ($parallelState, $parallelState2)
 
 return reflection:getParallelRegionExtension($originalState, $parallelStates, ()) :)
+
+
+(: Check if refining condition of transition with no current condition works. expected: refined transition
+let $originalState :=  $mbaHolton//sc:state[@id='Restructuring']
+let $transition := $originalState//sc:transition[2]
+let $condition := "New Condition"
+
+return reflection:getTransitionWithRefinedPreCondition($transition, $condition) :)
+
+
+(: Check if refining condition of transition with already existing condition works. expected: refined transition :)
+let $inlineMBA := <mba xmlns="http://www.dke.jku.at/MBA" xmlns:sync="http://www.dke.jku.at/MBA/Synchronization" xmlns:sc="http://www.w3.org/2005/07/scxml" name="HoltonHotelChain" hierarchy="parallel" topLevel="business" isDefault="true">
+    <levels>
+      <level name="business"> 
+        <elements>
+          <sc:scxml name="Business">
+            <sc:datamodel>
+              <sc:data id="description">Worldwide hotel chain</sc:data>
+            </sc:datamodel>
+            <sc:initial>
+              <sc:transition target="Restructuring"/>
+            </sc:initial>
+            <sc:state id="Restructuring">
+              <sc:transition event="createAccomodationType">
+                <sync:newDescendant name="$_event/data/name" level="accomodationType"/>
+              </sc:transition>
+              <sc:transition event="reopen" cond="existingCondition" target="Running"/>
+            </sc:state>
+            <sc:state id="Running">
+              <sc:transition event="restructure" target="Restructuring"/>
+            </sc:state>
+          </sc:scxml>
+        </elements>
+      </level>
+     </levels>
+    </mba>
+
+let $originalState :=  $inlineMBA//sc:state[@id='Restructuring']
+let $transition := $originalState//sc:transition[2]
+let $condition := "New Condition"
+
+return reflection:getTransitionWithRefinedPreCondition($transition, $condition) 
+
