@@ -196,12 +196,12 @@ declare function reflection:getTransitionWithRefinedTarget($transition as elemen
             $refinedScxml//sc:state[@id = $transitionSourceState/@id]//sc:transition[$indexOfTransition]
         ) else (
             error(QName('http://www.dke.jku.at/MBA/err',
-                    'RefineTransitionWithEventConsistencyCheck'),
+                    'RefineTransitionWithTargetConsistencyCheck'),
                     concat('Transition cannot be refined with new target ', $target, ' because this would result in behavior consistency violation'))
         )
     ) else (
         error(QName('http://www.dke.jku.at/MBA/err',
-                'RefineTransitionEventCheck'),
+                'RefineTransitionTargetCheck'),
                 concat('Transition cannot be refined with new target ', $target, ' because MBA ', $mba/@name/data(), ' has already descendants'))
     )
 
@@ -210,4 +210,40 @@ declare function reflection:getTransitionWithRefinedTarget($transition as elemen
 declare updating function reflection:refineTransitionTarget($transition as element(), $target as xs:string) {
     let  $refinedTransition := reflection:getTransitionWithRefinedTarget($transition, $target)
     return replace node $transition with $refinedTransition
+};
+
+declare function reflection:getTransitionWithRefinedSource($transition as element(), $source as xs:string) as element()* {
+    let $mba := $transition/ancestor::mba:mba
+
+    return if (not(mba:getDescendants($mba))) then (
+        let $originalScxml := $transition/ancestor::sc:scxml
+        let $transitionSourceState := sc:getSourceState($transition)
+        let $indexOfTransition := functx:index-of-node($transitionSourceState//sc:transition, $transition)
+
+        let $refinedScxml := copy $c := $originalScxml modify (
+            let $stateCopy := $c//sc:state[@id = $transitionSourceState/@id/data()]
+            let $newSourceState := $c//sc:state[@id = $source]
+            let $transitionCopy := $stateCopy//sc:transition[$indexOfTransition]
+
+            return (insert node $transitionCopy into $newSourceState,
+                    delete node $transitionCopy)
+        ) return $c
+
+        return if (scc:isBehaviorConsistentSpecialization($originalScxml, $refinedScxml)) then (
+            $refinedScxml//sc:state[@id = $transitionSourceState/@id]
+        ) else (
+            error(QName('http://www.dke.jku.at/MBA/err',
+                    'RefineTransitionWithSourceConsistencyCheck'),
+                    concat('Transition cannot be refined with new source ', $source, ' because this would result in behavior consistency violation'))
+        )
+    ) else (
+        error(QName('http://www.dke.jku.at/MBA/err',
+                'RefineTransitionSourceCheck'),
+                concat('Transition cannot be refined with new source ', $source, ' because MBA ', $mba/@name/data(), ' has already descendants'))
+    )
+};
+
+declare updating function reflection:refineTransitionSource($transition as element(), $source as xs:string) {
+    let  $refinedTransitionStateNode := reflection:getTransitionWithRefinedTarget($transition, $source)
+    return replace node sc:getSourceState($transition) with $refinedTransitionStateNode
 };
