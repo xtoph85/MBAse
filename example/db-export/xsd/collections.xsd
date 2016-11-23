@@ -1,0 +1,29 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:mba="http://www.dke.jku.at/MBA" targetNamespace="http://www.dke.jku.at/MBA" elementFormDefault="qualified" attributeFormDefault="unqualified">
+  <xs:element name="collections">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="collection" minOccurs="0" maxOccurs="unbounded">
+          <xs:complexType>
+            <xs:attribute name="name" type="xs:string" use="required"/>
+            <xs:attribute name="file" type="xs:string" use="required"/>
+            <xs:attribute name="hierarchy" type="hierarchyType" use="optional" default="complex"/>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+    <xs:key name="keyCollectionName">
+      <xs:selector xpath="mba:collection"/>
+      <xs:field xpath="@name"/>
+    </xs:key>
+    <xs:key name="keyCollectionName">
+      <xs:selector xpath="mba:collection"/>
+      <xs:field xpath="@file"/>
+    </xs:key>
+  </xs:element>
+  <xs:simpleType name="hierarchyType">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="simple"/>
+      <xs:enumeration value="complex"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>

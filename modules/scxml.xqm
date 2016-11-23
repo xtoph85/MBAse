@@ -29,6 +29,7 @@
  : is included in the repository.
  
  : @author Christoph Schütz
+ : @author Michael Weichselbaumer
  :)
 module namespace sc = 'http://www.w3.org/2005/07/scxml';
 import module namespace scx='http://www.w3.org/2005/07/scxml/extension/' at 'scxml_extension.xqm';
@@ -481,6 +482,7 @@ declare function sc:getInitialStates($state) as element()* {
       return sc:getEffectiveTargetStates($transition)
   )
 };
+
 
 declare function sc:isCompoundState($state as element()) as xs:boolean {
   ( fn:exists($state/sc:state) or

@@ -1,0 +1,13 @@
+<collections xmlns="http://www.dke.jku.at/MBA" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.dke.jku.at/MBA xsd/collections.xsd">
+  <collection name="parallelHierarchy" file="collections/parallelHierarchy.xml" hierarchy="parallel">
+    <uninitialized>
+      <mba ref="JohannesKeplerUniversity"/>
+      <mba ref="SocialAndEconomicSciences"/>
+      <mba ref="InformationSystems"/>
+      <mba ref="Medical"/>
+      <mba ref="TechnicalUniversityVienna"/>
+      <mba ref="Physics"/>
+    </uninitialized>
+    <updated/>
+  </collection>
+</collections>
